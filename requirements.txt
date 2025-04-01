@@ -2,5 +2,4 @@ streamlit
 datetime
 requests
 plotly
-os
 streamlit_option_menu
