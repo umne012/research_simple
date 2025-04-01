@@ -26,7 +26,6 @@ search_groups = [
     {"groupName": "SKB", "keywords": ["skb", "브로드밴드", "btv", "비티비", "b티비"], "exclude": []},
     {"groupName": "LGU", "keywords": ["LGU+", "유플러스", "유플"], "exclude": []},
 ]
-st.write("🔐 시크릿 키 확인:", st.secrets.get("NAVER_CLIENT_ID", "❌ 존재하지 않음"))
 
 if selected_tab == "검색트렌드":
     st.title("검색트렌드 분석")
