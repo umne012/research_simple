@@ -4,8 +4,29 @@ import requests
 import plotly.graph_objects as go
 from streamlit_option_menu import option_menu
 from streamlit_tags import st_tags
+import time
 
 st.set_page_config(layout="wide")
+
+# ✅ 전체 폰트 Pretendard 적용
+st.markdown("""
+    <style>
+    * {
+        font-family: 'Pretendard', sans-serif;
+    }
+    .st-emotion-cache-6qob1r {  /* Streamlit sidebar title */
+        font-weight: bold;
+    }
+    .tag-box {
+        background-color: #f1f3f5;
+        padding: 8px 12px;
+        margin: 4px;
+        border-radius: 8px;
+        display: inline-block;
+        font-size: 14px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # ✅ 사이드 네비게이션 메뉴 적용
 with st.sidebar:
@@ -41,7 +62,10 @@ if selected_tab == "검색트렌드":
     with st.expander("📋 그룹별 검색어/제외어 설정", expanded=False):
         group_inputs = {}
         for group in original_search_groups:
-            st.markdown(f"**🔹 {group['groupName']}**")
+            st.markdown(f"""
+            <div style='padding: 10px; background-color: #f9f9f9; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px;'>
+                <h5 style='color: #333;'>{group['groupName']}</h5>
+            """, unsafe_allow_html=True)
             kw_tags = st_tags(
                 label="검색어",
                 text="엔터로 여러 개 등록",
@@ -54,6 +78,7 @@ if selected_tab == "검색트렌드":
                 value=group["exclude"],
                 key=f"ex_{group['groupName']}"
             )
+            st.markdown("</div>", unsafe_allow_html=True)
             group_inputs[group["groupName"]] = {
                 "keywords": kw_tags,
                 "exclude": ex_tags
@@ -100,43 +125,50 @@ if selected_tab == "검색트렌드":
     except Exception as e:
         st.error(f"API 요청 실패: {e}")
 
-    # 🔄 개선된 언급량 수집 로직 (날짜별로 정확하게 수집)
+    # 🔄 언급량 수집 (날짜별 정확히 수집 + 진행 상태 표시)
     mention_data = {"labels": date_range, "datasets": []}
     group_mentions = {g["groupName"]: [] for g in search_groups}
 
-    for group in search_groups:
-        values = []
-        for d in date_range:
-            total_mentions = 0
-            for keyword in group["keywords"]:
-                query = f"{keyword} {' '.join([f'-{w}' for w in group.get('exclude', [])])} {d}"
-                for endpoint in ["news.json", "blog.json"]:
-                    try:
-                        res = requests.get(
-                            f"https://openapi.naver.com/v1/search/{endpoint}",
-                            headers={
-                                "X-Naver-Client-Id": st.secrets["NAVER_CLIENT_ID_2"],
-                                "X-Naver-Client-Secret": st.secrets["NAVER_CLIENT_SECRET_2"],
-                            },
-                            params={
-                                "query": query,
-                                "display": 1,
-                                "start": 1,
-                                "sort": "date"
-                            },
-                        )
-                        if res.ok:
-                            json_data = res.json()
-                            total_mentions += json_data.get("total", 0)
-                            for item in json_data.get("items", []):
-                                group_mentions[group["groupName"]].append({
-                                    "title": item["title"].replace("<b>", "").replace("</b>", ""),
-                                    "link": item["link"]
-                                })
-                    except:
-                        pass
-            values.append(total_mentions)
-        mention_data["datasets"].append({"label": group["groupName"], "data": values})
+    with st.spinner("🔄 언급량 수집 중..."):
+        progress = st.progress(0, text="언급량 수집 진행률")
+        total_steps = len(search_groups) * len(date_range)
+        step = 0
+
+        for group in search_groups:
+            values = []
+            for d in date_range:
+                total_mentions = 0
+                for keyword in group["keywords"]:
+                    query = f"{keyword} {' '.join([f'-{w}' for w in group.get('exclude', [])])} {d}"
+                    for endpoint in ["news.json", "blog.json"]:
+                        try:
+                            res = requests.get(
+                                f"https://openapi.naver.com/v1/search/{endpoint}",
+                                headers={
+                                    "X-Naver-Client-Id": st.secrets["NAVER_CLIENT_ID_2"],
+                                    "X-Naver-Client-Secret": st.secrets["NAVER_CLIENT_SECRET_2"],
+                                },
+                                params={
+                                    "query": query,
+                                    "display": 1,
+                                    "start": 1,
+                                    "sort": "date"
+                                },
+                            )
+                            if res.ok:
+                                json_data = res.json()
+                                total_mentions += json_data.get("total", 0)
+                                for item in json_data.get("items", []):
+                                    group_mentions[group["groupName"]].append({
+                                        "title": item["title"].replace("<b>", "").replace("</b>", ""),
+                                        "link": item["link"]
+                                    })
+                        except:
+                            pass
+                values.append(total_mentions)
+                step += 1
+                progress.progress(step / total_steps, text=f"{group['groupName']} {d} 수집 중...")
+            mention_data["datasets"].append({"label": group["groupName"], "data": values})
 
     # 📊 그래프 그리기
     st.subheader("검색량 및 언급량 그래프")
