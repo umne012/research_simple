@@ -91,11 +91,6 @@ if selected_tab == "검색트렌드":
             ]
 
     # ✅ 분석 버튼 별도 배치
-    st.markdown("""
-    <div style='margin-top: 20px; margin-bottom: 20px;'>
-        <h4>📊 분석 시작</h4>
-    </div>
-    """, unsafe_allow_html=True)
     if st.button("🔍 검색량 및 언급량 분석 시작"):
         st.session_state["run_analysis"] = True
 
