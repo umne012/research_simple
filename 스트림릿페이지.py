@@ -1,10 +1,7 @@
-
-
 import streamlit as st
 from datetime import date, timedelta
 import requests
 import plotly.graph_objects as go
-import os
 from streamlit_option_menu import option_menu
 
 st.set_page_config(layout="wide")
@@ -19,7 +16,7 @@ with st.sidebar:
         default_index=0,
     )
 
-# 검색 그룹 정의
+# ✅ 초기 검색 그룹 설정
 search_groups = [
     {"groupName": "Skylife", "keywords": ["스카이라이프", "skylife"], "exclude": []},
     {"groupName": "KT", "keywords": ["KT", "케이티", "기가지니", "지니티비"], "exclude": ["SKT"]},
@@ -30,16 +27,34 @@ search_groups = [
 if selected_tab == "검색트렌드":
     st.title("검색트렌드 분석")
 
-    # 📅 날짜 입력 (한 줄에 '시작일: [날짜] ~ 종료일: [날짜]' 형식으로 깔끔하게 배치)
-    with st.container():
-        date_container = st.columns([1, 0.1, 1])
-        with date_container[0]:
-            start_date = st.date_input("시작일", value=date(2025, 3, 12), label_visibility="visible")
-        with date_container[1]:
-            st.markdown("<div style='text-align:center; padding-top:35px;'>~</div>", unsafe_allow_html=True)
-        with date_container[2]:
-            end_date = st.date_input("종료일", value=date(2025, 3, 18), label_visibility="visible")
+    # 📅 날짜 입력 (한 줄에 배치)
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        start_date = st.date_input("시작일", value=date(2025, 3, 12))
+    with col2:
+        end_date = st.date_input("종료일", value=date(2025, 3, 18))
 
+    # 📌 그룹별 검색어/제외어 수정 인터페이스
+    with st.expander("📋 그룹별 검색어/제외어 설정", expanded=False):
+        group_inputs = {}
+        for group in search_groups:
+            st.markdown(f"**🔹 {group['groupName']}**")
+            kw = st.text_input(f"검색어 ({group['groupName']})", ", ".join(group["keywords"]), key=f"kw_{group['groupName']}")
+            ex = st.text_input(f"제외어 ({group['groupName']})", ", ".join(group["exclude"]), key=f"ex_{group['groupName']}")
+            group_inputs[group["groupName"]] = {
+                "keywords": [k.strip() for k in kw.split(",") if k.strip()],
+                "exclude": [e.strip() for e in ex.split(",") if e.strip()],
+            }
+
+    # 사용자 입력 반영하여 search_groups 재정의
+    search_groups = [
+        {
+            "groupName": name,
+            "keywords": values["keywords"],
+            "exclude": values["exclude"]
+        }
+        for name, values in group_inputs.items()
+    ]
 
     def get_date_range(start, end):
         return [(start + timedelta(days=i)).isoformat() for i in range((end - start).days + 1)]
@@ -116,7 +131,8 @@ if selected_tab == "검색트렌드":
         margin=dict(l=40, r=40, t=60, b=40),
         xaxis=dict(title="날짜", showgrid=True),
         yaxis=dict(title="값", showgrid=True),
-        legend=dict(orientation="h", x=0, y=1.15, xanchor="center"))
+        legend=dict(orientation="h", x=0.5, y=-0.2, xanchor="center")
+    )
 
     with gcol1:
         fig = go.Figure(layout=plot_layout)
@@ -156,4 +172,3 @@ if selected_tab == "검색트렌드":
                     </a>
                 </div>
                 """, unsafe_allow_html=True)
-
