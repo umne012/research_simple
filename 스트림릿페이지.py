@@ -41,7 +41,7 @@ with st.sidebar:
 # ✅ 초기 검색 그룹 설정
 original_search_groups = [
     {"groupName": "Skylife", "keywords": ["스카이라이프", "skylife"], "exclude": []},
-    {"groupName": "KT", "keywords": ["KT", "케이티", "기가지니", "지니티비"], "exclude": ["SKT", "M 모바일"]},
+    {"groupName": "KT", "keywords": ["KT", "케이티", "기가지니", "지니티비"], "exclude": ["SKT"]},
     {"groupName": "SKB", "keywords": ["skb", "브로드밴드", "btv", "비티비", "b티비"], "exclude": []},
     {"groupName": "LGU", "keywords": ["LGU+", "유플러스", "유플"], "exclude": []},
 ]
@@ -89,3 +89,16 @@ if selected_tab == "검색트렌드":
                 }
                 for name, values in group_inputs.items()
             ]
+
+    # ✅ 분석 버튼 별도 배치
+    st.markdown("""
+    <div style='margin-top: 20px; margin-bottom: 20px;'>
+        <h4>📊 분석 시작</h4>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("🔍 검색량 및 언급량 분석 시작"):
+        st.session_state["run_analysis"] = True
+
+    if st.session_state.get("run_analysis", False):
+        # 분석 코드 여기에 이어서 실행 (예: 트렌드 API 호출 등)
+        st.info("🔄 분석 중입니다...")
