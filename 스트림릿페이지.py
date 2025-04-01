@@ -168,10 +168,16 @@ if selected_tab == "검색트렌드":
             plot_bgcolor="#ffffff",
             paper_bgcolor="#ffffff",
             title=dict(x=0.05, font=dict(size=18)),
-            margin=dict(l=40, r=40, t=60, b=40),
+            margin=dict(l=40, r=40, t=60, b=100),
             xaxis=dict(title="날짜", showgrid=True),
             yaxis=dict(title="값", showgrid=True),
-            legend=dict(orientation="h",x=1, y=-0.2)
+            legend=dict(
+                orientation="h",
+                x=0.5,
+                y=-0.2,
+                xanchor="center",
+                yanchor="top"
+            )
         )
 
         with gcol1:
