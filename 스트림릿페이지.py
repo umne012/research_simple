@@ -52,8 +52,8 @@ if selected_tab == "검색트렌드":
         response = requests.post(
             "https://openapi.naver.com/v1/datalab/search",
             headers={
-                "X-Naver-Client-Id": NAVER_CLIENT_ID,
-                "X-Naver-Client-Secret": NAVER_CLIENT_SECRET,
+                "X-Naver-Client-Id": st.secrets["NAVER_CLIENT_ID"],
+                "X-Naver-Client-Secret": st.secrets["NAVER_CLIENT_SECRET"],
                 "Content-Type": "application/json",
             },
             json={
@@ -88,8 +88,8 @@ if selected_tab == "검색트렌드":
                         res = requests.get(
                             f"https://openapi.naver.com/v1/search/{endpoint}",
                             headers={
-                                "X-Naver-Client-Id": NAVER_CLIENT_ID_2,
-                                "X-Naver-Client-Secret": NAVER_CLIENT_SECRET_2,
+                                "X-Naver-Client-Id": st.secrets["NAVER_CLIENT_ID_2"],
+                                "X-Naver-Client-Secret": st.secrets["NAVER_CLIENT_SECRET_2"],
                             },
                             params={"query": full_query, "display": 5, "start": 1, "sort": "date"},
                         )
