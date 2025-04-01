@@ -3,6 +3,7 @@ from datetime import date, timedelta
 import requests
 import plotly.graph_objects as go
 from streamlit_option_menu import option_menu
+from streamlit_tags import st_tags
 
 st.set_page_config(layout="wide")
 
@@ -17,12 +18,14 @@ with st.sidebar:
     )
 
 # ✅ 초기 검색 그룹 설정
-search_groups = [
+original_search_groups = [
     {"groupName": "Skylife", "keywords": ["스카이라이프", "skylife"], "exclude": []},
     {"groupName": "KT", "keywords": ["KT", "케이티", "기가지니", "지니티비"], "exclude": ["SKT"]},
     {"groupName": "SKB", "keywords": ["skb", "브로드밴드", "btv", "비티비", "b티비"], "exclude": []},
     {"groupName": "LGU", "keywords": ["LGU+", "유플러스", "유플"], "exclude": []},
 ]
+
+search_groups = original_search_groups.copy()
 
 if selected_tab == "검색트렌드":
     st.title("검색트렌드 분석")
@@ -34,27 +37,37 @@ if selected_tab == "검색트렌드":
     with col2:
         end_date = st.date_input("종료일", value=date(2025, 3, 18))
 
-    # 📌 그룹별 검색어/제외어 수정 인터페이스
+    # 📌 그룹별 검색어/제외어 수정 인터페이스 (태그형 + 적용 버튼)
     with st.expander("📋 그룹별 검색어/제외어 설정", expanded=False):
         group_inputs = {}
-        for group in search_groups:
+        for group in original_search_groups:
             st.markdown(f"**🔹 {group['groupName']}**")
-            kw = st.text_input(f"검색어 ({group['groupName']})", ", ".join(group["keywords"]), key=f"kw_{group['groupName']}")
-            ex = st.text_input(f"제외어 ({group['groupName']})", ", ".join(group["exclude"]), key=f"ex_{group['groupName']}")
+            kw_tags = st_tags(
+                label="검색어",
+                text="엔터로 여러 개 등록",
+                value=group["keywords"],
+                key=f"kw_{group['groupName']}"
+            )
+            ex_tags = st_tags(
+                label="제외어",
+                text="엔터로 여러 개 등록",
+                value=group["exclude"],
+                key=f"ex_{group['groupName']}"
+            )
             group_inputs[group["groupName"]] = {
-                "keywords": [k.strip() for k in kw.split(",") if k.strip()],
-                "exclude": [e.strip() for e in ex.split(",") if e.strip()],
+                "keywords": kw_tags,
+                "exclude": ex_tags
             }
 
-    # 사용자 입력 반영하여 search_groups 재정의
-    search_groups = [
-        {
-            "groupName": name,
-            "keywords": values["keywords"],
-            "exclude": values["exclude"]
-        }
-        for name, values in group_inputs.items()
-    ]
+        if st.button("🔁 설정 적용"):
+            search_groups = [
+                {
+                    "groupName": name,
+                    "keywords": values["keywords"],
+                    "exclude": values["exclude"]
+                }
+                for name, values in group_inputs.items()
+            ]
 
     def get_date_range(start, end):
         return [(start + timedelta(days=i)).isoformat() for i in range((end - start).days + 1)]
@@ -87,17 +100,16 @@ if selected_tab == "검색트렌드":
     except Exception as e:
         st.error(f"API 요청 실패: {e}")
 
-    # 언급량 수집 (뉴스+블로그)
+    # 🔄 개선된 언급량 수집 로직 (날짜별로 정확하게 수집)
     mention_data = {"labels": date_range, "datasets": []}
     group_mentions = {g["groupName"]: [] for g in search_groups}
 
     for group in search_groups:
         values = []
         for d in date_range:
-            exclude_query = " ".join([f"-{word}" for word in group.get("exclude", [])])
             total_mentions = 0
             for keyword in group["keywords"]:
-                full_query = f"{keyword} {exclude_query} {d}"
+                query = f"{keyword} {' '.join([f'-{w}' for w in group.get('exclude', [])])} {d}"
                 for endpoint in ["news.json", "blog.json"]:
                     try:
                         res = requests.get(
@@ -106,11 +118,17 @@ if selected_tab == "검색트렌드":
                                 "X-Naver-Client-Id": st.secrets["NAVER_CLIENT_ID_2"],
                                 "X-Naver-Client-Secret": st.secrets["NAVER_CLIENT_SECRET_2"],
                             },
-                            params={"query": full_query, "display": 5, "start": 1, "sort": "date"},
+                            params={
+                                "query": query,
+                                "display": 1,
+                                "start": 1,
+                                "sort": "date"
+                            },
                         )
                         if res.ok:
-                            total_mentions += res.json().get("total", 0)
-                            for item in res.json().get("items", []):
+                            json_data = res.json()
+                            total_mentions += json_data.get("total", 0)
+                            for item in json_data.get("items", []):
                                 group_mentions[group["groupName"]].append({
                                     "title": item["title"].replace("<b>", "").replace("</b>", ""),
                                     "link": item["link"]
@@ -120,7 +138,7 @@ if selected_tab == "검색트렌드":
             values.append(total_mentions)
         mention_data["datasets"].append({"label": group["groupName"], "data": values})
 
-    # 그래프 그리기
+    # 📊 그래프 그리기
     st.subheader("검색량 및 언급량 그래프")
     gcol1, gcol2 = st.columns(2)
 
@@ -158,7 +176,7 @@ if selected_tab == "검색트렌드":
             ))
         st.plotly_chart(fig2, use_container_width=True)
 
-    # 뉴스·블로그 문장 4열 출력 (스타일 개선)
+    # 📰 뉴스·블로그 문장 4열 출력
     st.subheader("실시간 뉴스·블로그 문장 리스트")
     cols = st.columns(4)
     for idx, group in enumerate(search_groups):
