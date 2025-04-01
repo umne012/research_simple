@@ -14,7 +14,7 @@ st.markdown("""
     * {
         font-family: 'Pretendard', sans-serif;
     }
-    .st-emotion-cache-6qob1r {  /* Streamlit sidebar title */
+    .st-emotion-cache-6qob1r {
         font-weight: bold;
     }
     .tag-box {
@@ -24,6 +24,14 @@ st.markdown("""
         border-radius: 8px;
         display: inline-block;
         font-size: 14px;
+    }
+    .group-card {
+        padding: 20px;
+        margin-bottom: 16px;
+        border-radius: 12px;
+        border: 1px solid #dee2e6;
+        background-color: #ffffff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -62,10 +70,7 @@ if selected_tab == "검색트렌드":
     with st.expander("📋 그룹별 검색어/제외어 설정", expanded=False):
         group_inputs = {}
         for group in original_search_groups:
-            st.markdown(f"""
-            <div style='padding: 10px; background-color: #f9f9f9; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px;'>
-                <h5 style='color: #333;'>{group['groupName']}</h5>
-            """, unsafe_allow_html=True)
+            st.markdown(f"<div class='group-card'><h5 style='color: #333;'>{group['groupName']}</h5>", unsafe_allow_html=True)
             kw_tags = st_tags(
                 label="검색어",
                 text="엔터로 여러 개 등록",
@@ -93,132 +98,3 @@ if selected_tab == "검색트렌드":
                 }
                 for name, values in group_inputs.items()
             ]
-
-    def get_date_range(start, end):
-        return [(start + timedelta(days=i)).isoformat() for i in range((end - start).days + 1)]
-
-    date_range = get_date_range(start_date, end_date)
-
-    # 검색 트렌드 API 호출
-    trend_data = {}
-    try:
-        response = requests.post(
-            "https://openapi.naver.com/v1/datalab/search",
-            headers={
-                "X-Naver-Client-Id": st.secrets["NAVER_CLIENT_ID"],
-                "X-Naver-Client-Secret": st.secrets["NAVER_CLIENT_SECRET"],
-                "Content-Type": "application/json",
-            },
-            json={
-                "startDate": str(start_date),
-                "endDate": str(end_date),
-                "timeUnit": "date",
-                "keywordGroups": [
-                    {"groupName": g["groupName"], "keywords": g["keywords"]} for g in search_groups
-                ],
-            },
-        )
-        if response.ok:
-            trend_data = response.json()
-        else:
-            st.error(f"검색 트렌드 오류: {response.status_code}")
-    except Exception as e:
-        st.error(f"API 요청 실패: {e}")
-
-    # 🔄 언급량 수집 (날짜별 정확히 수집 + 진행 상태 표시)
-    mention_data = {"labels": date_range, "datasets": []}
-    group_mentions = {g["groupName"]: [] for g in search_groups}
-
-    with st.spinner("🔄 언급량 수집 중..."):
-        progress = st.progress(0, text="언급량 수집 진행률")
-        total_steps = len(search_groups) * len(date_range)
-        step = 0
-
-        for group in search_groups:
-            values = []
-            for d in date_range:
-                total_mentions = 0
-                for keyword in group["keywords"]:
-                    query = f"{keyword} {' '.join([f'-{w}' for w in group.get('exclude', [])])} {d}"
-                    for endpoint in ["news.json", "blog.json"]:
-                        try:
-                            res = requests.get(
-                                f"https://openapi.naver.com/v1/search/{endpoint}",
-                                headers={
-                                    "X-Naver-Client-Id": st.secrets["NAVER_CLIENT_ID_2"],
-                                    "X-Naver-Client-Secret": st.secrets["NAVER_CLIENT_SECRET_2"],
-                                },
-                                params={
-                                    "query": query,
-                                    "display": 1,
-                                    "start": 1,
-                                    "sort": "date"
-                                },
-                            )
-                            if res.ok:
-                                json_data = res.json()
-                                total_mentions += json_data.get("total", 0)
-                                for item in json_data.get("items", []):
-                                    group_mentions[group["groupName"]].append({
-                                        "title": item["title"].replace("<b>", "").replace("</b>", ""),
-                                        "link": item["link"]
-                                    })
-                        except:
-                            pass
-                values.append(total_mentions)
-                step += 1
-                progress.progress(step / total_steps, text=f"{group['groupName']} {d} 수집 중...")
-            mention_data["datasets"].append({"label": group["groupName"], "data": values})
-
-    # 📊 그래프 그리기
-    st.subheader("검색량 및 언급량 그래프")
-    gcol1, gcol2 = st.columns(2)
-
-    plot_layout = go.Layout(
-        plot_bgcolor="#ffffff",
-        paper_bgcolor="#ffffff",
-        title=dict(x=0.05, font=dict(size=18)),
-        margin=dict(l=40, r=40, t=60, b=40),
-        xaxis=dict(title="날짜", showgrid=True),
-        yaxis=dict(title="값", showgrid=True),
-        legend=dict(orientation="h", x=0.5, y=-0.2, xanchor="center")
-    )
-
-    with gcol1:
-        fig = go.Figure(layout=plot_layout)
-        fig.update_layout(title="네이버 검색량")
-        for group in trend_data.get("results", []):
-            fig.add_trace(go.Scatter(
-                x=[d["period"] for d in group["data"]],
-                y=[d["ratio"] for d in group["data"]],
-                mode="lines+markers",
-                name=group["title"]
-            ))
-        st.plotly_chart(fig, use_container_width=True)
-
-    with gcol2:
-        fig2 = go.Figure(layout=plot_layout)
-        fig2.update_layout(title="뉴스·블로그 언급량")
-        for ds in mention_data.get("datasets", []):
-            fig2.add_trace(go.Scatter(
-                x=mention_data.get("labels", []),
-                y=ds["data"],
-                mode="lines+markers",
-                name=ds["label"]
-            ))
-        st.plotly_chart(fig2, use_container_width=True)
-
-    # 📰 뉴스·블로그 문장 4열 출력
-    st.subheader("실시간 뉴스·블로그 문장 리스트")
-    cols = st.columns(4)
-    for idx, group in enumerate(search_groups):
-        with cols[idx % 4]:
-            st.markdown(f"<h4 style='text-align:center; color:#0366d6'>{group['groupName']}</h4>", unsafe_allow_html=True)
-            for item in group_mentions[group['groupName']][:10]:
-                st.markdown(f"""
-                <div style='border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:8px; background-color:#fafafa;'>
-                    <a href="{item['link']}" target="_blank" style="text-decoration:none; color:#333; font-weight:500;">
-                        🔗 {item['title']}
-                    </a>
-                </div>
-                """, unsafe_allow_html=True)
