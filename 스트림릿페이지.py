@@ -25,14 +25,6 @@ st.markdown("""
         display: inline-block;
         font-size: 14px;
     }
-    .group-card {
-        padding: 20px;
-        margin-bottom: 16px;
-        border-radius: 12px;
-        border: 1px solid #dee2e6;
-        background-color: #ffffff;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -49,7 +41,7 @@ with st.sidebar:
 # ✅ 초기 검색 그룹 설정
 original_search_groups = [
     {"groupName": "Skylife", "keywords": ["스카이라이프", "skylife"], "exclude": []},
-    {"groupName": "KT", "keywords": ["KT", "케이티", "기가지니", "지니티비"], "exclude": ["SKT", "M 모바일"]},
+    {"groupName": "KT", "keywords": ["KT", "케이티", "기가지니", "지니티비"], "exclude": ["SKT"]},
     {"groupName": "SKB", "keywords": ["skb", "브로드밴드", "btv", "비티비", "b티비"], "exclude": []},
     {"groupName": "LGU", "keywords": ["LGU+", "유플러스", "유플"], "exclude": []},
 ]
@@ -70,7 +62,7 @@ if selected_tab == "검색트렌드":
     with st.expander("📋 그룹별 검색어/제외어 설정", expanded=False):
         group_inputs = {}
         for group in original_search_groups:
-            st.markdown(f"<div class='group-card'><h5 style='color: #333;'>{group['groupName']}</h5>", unsafe_allow_html=True)
+            st.markdown(f"<h5 style='color: #333;'>{group['groupName']}</h5>", unsafe_allow_html=True)
             kw_tags = st_tags(
                 label="검색어",
                 text="엔터로 여러 개 등록",
@@ -83,7 +75,6 @@ if selected_tab == "검색트렌드":
                 value=group["exclude"],
                 key=f"ex_{group['groupName']}"
             )
-            st.markdown("</div>", unsafe_allow_html=True)
             group_inputs[group["groupName"]] = {
                 "keywords": kw_tags,
                 "exclude": ex_tags
