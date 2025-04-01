@@ -171,7 +171,7 @@ if selected_tab == "검색트렌드":
             margin=dict(l=40, r=40, t=60, b=40),
             xaxis=dict(title="날짜", showgrid=True),
             yaxis=dict(title="값", showgrid=True),
-            legend=dict(orientation="h",x=1, y=-0.2, xanchor="right")
+            legend=dict(orientation="h",x=1, y=-0.2, xanchor="center")
         )
 
         with gcol1:
