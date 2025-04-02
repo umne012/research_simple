@@ -8,7 +8,7 @@ import time
 
 st.set_page_config(layout="wide")
 
-# ✅ 스타일 설정
+# ✅ 전체 스타일 적용
 st.markdown("""
     <style>
     * {
@@ -43,7 +43,7 @@ with st.sidebar:
         default_index=0,
     )
 
-# ✅ 기본 검색 그룹
+# ✅ 초기 그룹
 original_search_groups = [
     {"groupName": "Skylife", "keywords": ["스카이라이프", "skylife"], "exclude": []},
     {"groupName": "KT", "keywords": ["KT", "케이티", "기가지니", "지니티비"], "exclude": ["SKT", "M 모바일"]},
@@ -59,6 +59,7 @@ search_groups = st.session_state.search_groups
 if selected_tab == "검색트렌드":
     st.title("검색트렌드 분석")
 
+    # ✅ 검색어/제외어 설정
     with st.expander("📋 그룹별 검색어/제외어 설정", expanded=False):
         group_inputs = {}
         for group in original_search_groups:
@@ -74,6 +75,7 @@ if selected_tab == "검색트렌드":
             ]
             search_groups = st.session_state.search_groups
 
+    # ✅ 날짜 선택
     today = date.today()
     default_start = today - timedelta(days=7)
     default_end = today
@@ -83,11 +85,14 @@ if selected_tab == "검색트렌드":
         start_date = st.date_input("시작일", value=default_start)
     with col2:
         end_date = st.date_input("종료일", value=default_end)
+
+    # ✅ 분석 시작 버튼 → rerun 없이 바로 실행
     with col3:
         st.markdown("<div style='padding-top: 28px;'>", unsafe_allow_html=True)
-        if st.button("🔍 분석 시작", key="run_button"):
-            st.session_state.run_analysis = True
+        run_analysis = st.button("🔍 분석 시작", key="run_button")
         st.markdown("</div>", unsafe_allow_html=True)
+
+    # ✅ PDF 저장 버튼
     with col4:
         st.markdown("""
             <div style='padding-top: 28px;'>
@@ -107,13 +112,8 @@ if selected_tab == "검색트렌드":
             </div>
         """, unsafe_allow_html=True)
 
-    # ✅ rerun 안전하게 실행
-    if st.session_state.get("run_analysis", False):
-        del st.session_state.run_analysis
-        st.experimental_rerun()
-
-    # ✅ 분석 수행
-    if "trend_data" not in st.session_state:
+    # ✅ run_analysis 클릭 시 분석 수행
+    if run_analysis:
         def get_date_range(start, end):
             return [(start + timedelta(days=i)).isoformat() for i in range((end - start).days + 1)]
 
