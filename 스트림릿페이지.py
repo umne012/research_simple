@@ -88,30 +88,51 @@ if selected_tab == "검색트렌드":
             ]
             search_groups = st.session_state.search_groups
 
-    # 📅 날짜 및 버튼 한 줄에 배치
-    d1, d2, b1, b2 = st.columns([1, 1, 1, 1])
-    with d1:
-        start_date = st.date_input("시작일", value=date(2025, 3, 12))
-    with d2:
-        end_date = st.date_input("종료일", value=date(2025, 3, 18))
-    with b1:
-        if st.button("🔍 분석"):
-            st.session_state.run_analysis = True
-    with b2:
-        st.markdown("""
-            <br>
-            <button onclick="window.print()" style="
-                background-color: #4CAF50;
-                color: white;
-                padding: 10px 20px;
-                border: none;
-                border-radius: 6px;
-                font-size: 16px;
-                cursor: pointer;
-            ">
-            📄 PDF로 저장
-            </button>
-        """, unsafe_allow_html=True)
+    # 📅 날짜 및 버튼 한 줄에 배치 (정렬 개선)
+    today = date.today()
+    default_start = today - timedelta(days=7)
+    default_end = today
+
+    with st.container():
+        col1, col2, col3, col4 = st.columns([1.2, 1.2, 1, 1.6])
+        with col1:
+            start_date = st.date_input("시작일", value=default_start)
+        with col2:
+            end_date = st.date_input("종료일", value=default_end)
+        with col3:
+            st.markdown("""
+                <div style='padding-top: 35px;'>
+                <form action="#" method="post">
+                    <input type="submit" value="🔍 분석 시작" style="
+                        background-color: #0366d6;
+                        color: white;
+                        padding: 10px 20px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 16px;
+                        cursor: pointer;">
+                </form>
+                </div>
+            """, unsafe_allow_html=True)
+            if st.session_state.get("force_run_analysis", False):
+                st.session_state.run_analysis = True
+                st.session_state.force_run_analysis = False
+        with col4:
+            st.markdown("""
+                <div style='padding-top: 35px;'>
+                <button onclick="window.print()" style="
+                    background-color: #4CAF50;
+                    color: white;
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 16px;
+                    cursor: pointer;
+                ">
+                📄 PDF 저장
+                </button>
+                </div>
+            """, unsafe_allow_html=True)
 
 
 
