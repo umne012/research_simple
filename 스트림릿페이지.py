@@ -8,6 +8,7 @@ import time
 
 st.set_page_config(layout="wide")
 
+# ✅ 스타일 설정
 st.markdown("""
     <style>
     * {
@@ -32,6 +33,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# ✅ 사이드 메뉴
 with st.sidebar:
     selected_tab = option_menu(
         menu_title="research",
@@ -41,6 +43,7 @@ with st.sidebar:
         default_index=0,
     )
 
+# ✅ 기본 검색 그룹
 original_search_groups = [
     {"groupName": "Skylife", "keywords": ["스카이라이프", "skylife"], "exclude": []},
     {"groupName": "KT", "keywords": ["KT", "케이티", "기가지니", "지니티비"], "exclude": ["SKT", "M 모바일"]},
@@ -104,10 +107,81 @@ if selected_tab == "검색트렌드":
             </div>
         """, unsafe_allow_html=True)
 
-    if st.session_state.get("run_analysis") is True:
-        st.session_state.run_analysis = False
+    # ✅ rerun 안전하게 실행
+    if st.session_state.get("run_analysis", False):
+        del st.session_state.run_analysis
         st.experimental_rerun()
 
+    # ✅ 분석 수행
+    if "trend_data" not in st.session_state:
+        def get_date_range(start, end):
+            return [(start + timedelta(days=i)).isoformat() for i in range((end - start).days + 1)]
+
+        date_range = get_date_range(start_date, end_date)
+
+        trend_data = {}
+        try:
+            response = requests.post(
+                "https://openapi.naver.com/v1/datalab/search",
+                headers={
+                    "X-Naver-Client-Id": st.secrets["NAVER_CLIENT_ID"],
+                    "X-Naver-Client-Secret": st.secrets["NAVER_CLIENT_SECRET"],
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "startDate": str(start_date),
+                    "endDate": str(end_date),
+                    "timeUnit": "date",
+                    "keywordGroups": [
+                        {"groupName": g["groupName"], "keywords": g["keywords"]} for g in search_groups
+                    ],
+                },
+            )
+            if response.ok:
+                trend_data = response.json()
+                st.session_state.trend_data = trend_data
+            else:
+                st.error(f"검색 트렌드 오류: {response.status_code}")
+        except Exception as e:
+            st.error(f"API 요청 실패: {e}")
+
+        mention_data = {"labels": date_range, "datasets": []}
+        group_mentions = {g["groupName"]: [] for g in search_groups}
+
+        with st.spinner("📰 뉴스·블로그 언급량 수집 중..."):
+            for group in search_groups:
+                values = []
+                for d in date_range:
+                    exclude_query = " ".join([f"-{word}" for word in group.get("exclude", [])])
+                    total_mentions = 0
+                    for keyword in group["keywords"]:
+                        full_query = f"{keyword} {exclude_query} {d}"
+                        for endpoint in ["news.json", "blog.json"]:
+                            try:
+                                res = requests.get(
+                                    f"https://openapi.naver.com/v1/search/{endpoint}",
+                                    headers={
+                                        "X-Naver-Client-Id": st.secrets["NAVER_CLIENT_ID_2"],
+                                        "X-Naver-Client-Secret": st.secrets["NAVER_CLIENT_SECRET_2"],
+                                    },
+                                    params={"query": full_query, "display": 5, "start": 1, "sort": "date"},
+                                )
+                                if res.ok:
+                                    total_mentions += res.json().get("total", 0)
+                                    for item in res.json().get("items", []):
+                                        group_mentions[group["groupName"]].append({
+                                            "title": item["title"].replace("<b>", "").replace("</b>", ""),
+                                            "link": item["link"]
+                                        })
+                            except:
+                                pass
+                    values.append(total_mentions)
+                mention_data["datasets"].append({"label": group["groupName"], "data": values})
+
+        st.session_state.mention_data = mention_data
+        st.session_state.group_mentions = group_mentions
+
+    # ✅ 시각화
     trend_data = st.session_state.get("trend_data", {})
     mention_data = st.session_state.get("mention_data", {})
     group_mentions = st.session_state.get("group_mentions", {})
@@ -116,7 +190,7 @@ if selected_tab == "검색트렌드":
         st.subheader("검색량 및 언급량 그래프")
         gcol1, gcol2 = st.columns(2)
 
-        plot_layout = go.Layout(
+        layout = go.Layout(
             plot_bgcolor="#ffffff",
             paper_bgcolor="#ffffff",
             title=dict(x=0.05, font=dict(size=18)),
@@ -133,7 +207,7 @@ if selected_tab == "검색트렌드":
         )
 
         with gcol1:
-            fig = go.Figure(layout=plot_layout)
+            fig = go.Figure(layout=layout)
             fig.update_layout(title="네이버 검색량")
             for group in trend_data.get("results", []):
                 fig.add_trace(go.Scatter(
@@ -145,7 +219,7 @@ if selected_tab == "검색트렌드":
             st.plotly_chart(fig, use_container_width=True)
 
         with gcol2:
-            fig2 = go.Figure(layout=plot_layout)
+            fig2 = go.Figure(layout=layout)
             fig2.update_layout(title="뉴스·블로그 언급량")
             for ds in mention_data.get("datasets", []):
                 fig2.add_trace(go.Scatter(
