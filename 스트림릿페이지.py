@@ -217,8 +217,8 @@ if selected_tab == "검색트렌드":
 elif selected_tab == "연관어 분석":
     st.title("📌 연관어 네트워크 분석")
 
-    word_count_xlsx = "morpheme_word_count.xlsx"
-    morpheme_analysis_xlsx = "morpheme_analysis.xlsx"
+    word_count_xlsx = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count.xlsx"
+    morpheme_analysis_xlsx = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis.xlsx"
 
     @st.cache_data
     def load_word_and_sentence_data():
