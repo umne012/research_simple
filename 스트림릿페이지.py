@@ -118,9 +118,9 @@ if selected_tab == "검색트렌드":
     with col4:
         st.markdown("""
             <div style='padding-top: 28px;'>
-                <form>
-                    <input type="button" value="📄 PDF 저장" class="pdf-btn" onclick="window.print()">
-                </form>
+                <button onclick="window.print()" class="pdf-btn">
+                    📄 PDF 저장
+                </button>
             </div>
         """, unsafe_allow_html=True)
 
