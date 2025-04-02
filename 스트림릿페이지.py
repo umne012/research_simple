@@ -8,7 +8,7 @@ import time
 
 st.set_page_config(layout="wide")
 
-# ✅ 전체 폰트 Pretendard 적용
+# ✅ 전체 폰트 Pretendard 적용 및 버튼 스타일 통합
 st.markdown("""
     <style>
     * {
@@ -24,6 +24,36 @@ st.markdown("""
         border-radius: 8px;
         display: inline-block;
         font-size: 14px;
+    }
+    .dashed-button {
+        background-color: transparent;
+        color: #0366d6;
+        padding: 7px 28px;
+        border: 2px dashed #0366d6;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .dashed-button:hover {
+        background-color: #0366d6;
+        color: white;
+        border-style: solid;
+    }
+    .pdf-button {
+        background-color: transparent;
+        color: #4CAF50;
+        padding: 7px 28px;
+        border: 2px dashed #4CAF50;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .pdf-button:hover {
+        background-color: #4CAF50;
+        color: white;
+        border-style: solid;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -103,14 +133,7 @@ if selected_tab == "검색트렌드":
             st.markdown("""
                 <div style='padding-top: 28px;'>
                 <form action="#" method="post">
-                    <input type="submit" value="🔍 분석 시작" style="
-                        background-color: #0366d6;
-                        color: white;
-                        padding: 7px 28px;
-                        border: none;
-                        border-radius: 6px;
-                        font-size: 16px;
-                        cursor: pointer;">
+                    <input type="submit" value="🔍 분석 시작" class="dashed-button">
                 </form>
                 </div>
             """, unsafe_allow_html=True)
@@ -120,19 +143,13 @@ if selected_tab == "검색트렌드":
         with col4:
             st.markdown("""
                 <div style='padding-top: 28px;'>
-                <button onclick="window.print()" style="
-                    background-color: #4CAF50;
-                    color: white;
-                    padding: 7px 28px;
-                    border: none;
-                    border-radius: 6px;
-                    font-size: 16px;
-                    cursor: pointer;
-                ">
+                <button onclick="window.print()" class="pdf-button">
                 📄 PDF 저장
                 </button>
                 </div>
             """, unsafe_allow_html=True)
+
+    # 이후 분석 및 시각화 코드 이어짐...
 
 
 
