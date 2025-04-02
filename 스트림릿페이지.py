@@ -4,27 +4,16 @@ import requests
 import plotly.graph_objects as go
 from streamlit_option_menu import option_menu
 from streamlit_tags import st_tags
+import time
 
 st.set_page_config(layout="wide")
 
-# ✅ 전체 폰트 Pretendard 적용 및 버튼 스타일 통합
 st.markdown("""
     <style>
     * {
         font-family: 'Pretendard', sans-serif;
     }
-    .st-emotion-cache-6qob1r {
-        font-weight: bold;
-    }
-    .tag-box {
-        background-color: #f1f3f5;
-        padding: 8px 12px;
-        margin: 4px;
-        border-radius: 8px;
-        display: inline-block;
-        font-size: 14px;
-    }
-    div.stButton > button.run-button {
+    div.stButton > button {
         background-color: transparent;
         color: #0366d6;
         padding: 7px 24px;
@@ -35,31 +24,14 @@ st.markdown("""
         cursor: pointer;
         transition: all 0.3s ease;
     }
-    div.stButton > button.run-button:hover {
+    div.stButton > button:hover {
         background-color: #0366d6;
-        color: white;
-        border-style: solid;
-    }
-    div.stButton > button.pdf-button {
-        background-color: transparent;
-        color: #4CAF50;
-        padding: 7px 24px;
-        border: 1px dashed #4CAF50;
-        border-radius: 6px;
-        font-size: 16px;
-        width: 100%;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    div.stButton > button.pdf-button:hover {
-        background-color: #4CAF50;
         color: white;
         border-style: solid;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# ✅ 사이드 네비게이션 메뉴 적용
 with st.sidebar:
     selected_tab = option_menu(
         menu_title="research",
@@ -69,7 +41,6 @@ with st.sidebar:
         default_index=0,
     )
 
-# ✅ 초기 검색 그룹 설정
 original_search_groups = [
     {"groupName": "Skylife", "keywords": ["스카이라이프", "skylife"], "exclude": []},
     {"groupName": "KT", "keywords": ["KT", "케이티", "기가지니", "지니티비"], "exclude": ["SKT", "M 모바일"]},
@@ -113,11 +84,88 @@ if selected_tab == "검색트렌드":
         st.markdown("<div style='padding-top: 28px;'>", unsafe_allow_html=True)
         if st.button("🔍 분석 시작", key="run_button"):
             st.session_state.run_analysis = True
-            st.experimental_rerun()
         st.markdown("</div>", unsafe_allow_html=True)
     with col4:
-        st.markdown("<div style='padding-top: 28px;'>", unsafe_allow_html=True)
-        if st.button("📄 PDF 저장", key="pdf_button"):
-            js = "window.print();"
-            st.components.v1.html(f"<script>{js}</script>", height=0)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("""
+            <div style='padding-top: 28px;'>
+                <button onclick="window.print()" style="
+                    background-color: transparent;
+                    color: #4CAF50;
+                    padding: 7px 24px;
+                    border: 1px dashed #4CAF50;
+                    border-radius: 6px;
+                    font-size: 16px;
+                    width: 100%;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                ">
+                    📄 PDF 저장
+                </button>
+            </div>
+        """, unsafe_allow_html=True)
+
+    if st.session_state.get("run_analysis") is True:
+        st.session_state.run_analysis = False
+        st.experimental_rerun()
+
+    trend_data = st.session_state.get("trend_data", {})
+    mention_data = st.session_state.get("mention_data", {})
+    group_mentions = st.session_state.get("group_mentions", {})
+
+    if trend_data and mention_data:
+        st.subheader("검색량 및 언급량 그래프")
+        gcol1, gcol2 = st.columns(2)
+
+        plot_layout = go.Layout(
+            plot_bgcolor="#ffffff",
+            paper_bgcolor="#ffffff",
+            title=dict(x=0.05, font=dict(size=18)),
+            margin=dict(l=40, r=40, t=60, b=100),
+            xaxis=dict(title="날짜", showgrid=True),
+            yaxis=dict(title="값", showgrid=True),
+            legend=dict(
+                orientation="h",
+                x=0.5,
+                y=-0.2,
+                xanchor="center",
+                yanchor="top"
+            )
+        )
+
+        with gcol1:
+            fig = go.Figure(layout=plot_layout)
+            fig.update_layout(title="네이버 검색량")
+            for group in trend_data.get("results", []):
+                fig.add_trace(go.Scatter(
+                    x=[d["period"] for d in group["data"]],
+                    y=[d["ratio"] for d in group["data"]],
+                    mode="lines+markers",
+                    name=group["title"]
+                ))
+            st.plotly_chart(fig, use_container_width=True)
+
+        with gcol2:
+            fig2 = go.Figure(layout=plot_layout)
+            fig2.update_layout(title="뉴스·블로그 언급량")
+            for ds in mention_data.get("datasets", []):
+                fig2.add_trace(go.Scatter(
+                    x=mention_data.get("labels", []),
+                    y=ds["data"],
+                    mode="lines+markers",
+                    name=ds["label"]
+                ))
+            st.plotly_chart(fig2, use_container_width=True)
+
+        st.subheader("실시간 뉴스·블로그 문장 리스트")
+        cols = st.columns(4)
+        for idx, group in enumerate(search_groups):
+            with cols[idx % 4]:
+                st.markdown(f"<h4 style='text-align:center; color:#0366d6'>{group['groupName']}</h4>", unsafe_allow_html=True)
+                for item in group_mentions.get(group['groupName'], [])[:10]:
+                    st.markdown(f'''
+                    <div style='border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:8px; background-color:#fafafa;'>
+                        <a href="{item['link']}" target="_blank" style="text-decoration:none; color:#333; font-weight:500;">
+                            🔗 {item['title']}
+                        </a>
+                    </div>
+                    ''', unsafe_allow_html=True)
