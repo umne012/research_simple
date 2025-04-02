@@ -34,7 +34,7 @@ st.markdown("""
         border: 1px solid #FA8072;
     }
 
-    /* 📄 PDF 저장 버튼 (hover 초록 강조) */
+    /* 📄 PDF 저장 버튼 */
     button.pdf-btn {
         background-color: transparent;
         color: #4CAF50;
@@ -51,7 +51,32 @@ st.markdown("""
         color: white;
         border: 1px solid #4CAF50;
     }
+
+    /* ✅ 인쇄 전용 스타일 */
+    @media print {
+        header, footer, .sidebar, .stButton, .css-1y4p8pa, .pdf-btn {
+            display: none !important;
+        }
+        .main {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+        }
+        body {
+            background: white !important;
+        }
+        a {
+            color: #0366d6 !important;
+            text-decoration: underline !important;
+        }
+    }
     </style>
+
+    <script>
+    function printPage() {
+        window.print();
+    }
+    </script>
 """, unsafe_allow_html=True)
 
 
@@ -118,11 +143,12 @@ if selected_tab == "검색트렌드":
     with col4:
         st.markdown("""
             <div style='padding-top: 28px;'>
-                <button onclick="window.print()" class="pdf-btn">
+                <button onclick="printPage()" class="pdf-btn">
                     📄 PDF 저장
                 </button>
             </div>
         """, unsafe_allow_html=True)
+
 
 
 
