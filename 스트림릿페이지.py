@@ -28,8 +28,8 @@ st.markdown("""
     .responsive-button {
         background-color: transparent;
         color: #0366d6;
-        padding: 8px 24px;
-        border: 2px dashed #0366d6;
+        padding: 7px 24px;
+        border: 1px dashed #0366d6;
         border-radius: 6px;
         font-size: 16px;
         cursor: pointer;
@@ -45,8 +45,8 @@ st.markdown("""
     .pdf-button {
         background-color: transparent;
         color: #4CAF50;
-        padding: 8px 24px;
-        border: 2px dashed #4CAF50;
+        padding: 7px 24px;
+        border: 1px dashed #4CAF50;
         border-radius: 6px;
         font-size: 16px;
         cursor: pointer;
@@ -128,7 +128,7 @@ if selected_tab == "검색트렌드":
     default_end = today
 
     with st.container():
-        col1, col2, col3, col4 = st.columns([1.2, 1.2, 1, 1])
+        col1, col2, col3, col4 = st.columns([2.1, 2.1, 1, 1])
         with col1:
             start_date = st.date_input("시작일", value=default_start)
         with col2:
