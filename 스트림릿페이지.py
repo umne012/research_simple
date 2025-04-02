@@ -94,7 +94,7 @@ if selected_tab == "검색트렌드":
     default_end = today
 
     with st.container():
-        col1, col2, col3, col4 = st.columns([1.6, 1.6, 1, 1])
+        col1, col2, col3, col4 = st.columns([1.8, 1.8, 1, 1])
         with col1:
             start_date = st.date_input("시작일", value=default_start)
         with col2:
@@ -106,7 +106,7 @@ if selected_tab == "검색트렌드":
                     <input type="submit" value="🔍 분석 시작" style="
                         background-color: #0366d6;
                         color: white;
-                        padding: 10px 20px;
+                        padding: 20px 30px;
                         border: none;
                         border-radius: 6px;
                         font-size: 16px;
@@ -123,7 +123,7 @@ if selected_tab == "검색트렌드":
                 <button onclick="window.print()" style="
                     background-color: #4CAF50;
                     color: white;
-                    padding: 10px 20px;
+                    padding: 20px 30px;
                     border: none;
                     border-radius: 6px;
                     font-size: 16px;
