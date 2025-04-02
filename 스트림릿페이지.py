@@ -25,17 +25,19 @@ st.markdown("""
         display: inline-block;
         font-size: 14px;
     }
-    .dashed-button {
+    .responsive-button {
         background-color: transparent;
         color: #0366d6;
-        padding: 7px 28px;
+        padding: 8px 24px;
         border: 2px dashed #0366d6;
         border-radius: 6px;
         font-size: 16px;
         cursor: pointer;
+        width: 100%;
+        box-sizing: border-box;
         transition: all 0.3s ease;
     }
-    .dashed-button:hover {
+    .responsive-button:hover {
         background-color: #0366d6;
         color: white;
         border-style: solid;
@@ -43,11 +45,13 @@ st.markdown("""
     .pdf-button {
         background-color: transparent;
         color: #4CAF50;
-        padding: 7px 28px;
+        padding: 8px 24px;
         border: 2px dashed #4CAF50;
         border-radius: 6px;
         font-size: 16px;
         cursor: pointer;
+        width: 100%;
+        box-sizing: border-box;
         transition: all 0.3s ease;
     }
     .pdf-button:hover {
@@ -124,7 +128,7 @@ if selected_tab == "검색트렌드":
     default_end = today
 
     with st.container():
-        col1, col2, col3, col4 = st.columns([2.1, 2.1, 1, 1])
+        col1, col2, col3, col4 = st.columns([1.2, 1.2, 1, 1])
         with col1:
             start_date = st.date_input("시작일", value=default_start)
         with col2:
@@ -133,7 +137,7 @@ if selected_tab == "검색트렌드":
             st.markdown("""
                 <div style='padding-top: 28px;'>
                 <form action="#" method="post">
-                    <input type="submit" value="🔍 분석 시작" class="dashed-button">
+                    <input type="submit" value="🔍 분석 시작" class="responsive-button">
                 </form>
                 </div>
             """, unsafe_allow_html=True)
@@ -150,7 +154,6 @@ if selected_tab == "검색트렌드":
             """, unsafe_allow_html=True)
 
     # 이후 분석 및 시각화 코드 이어짐...
-
 
 
     if st.session_state.get("run_analysis", False):
