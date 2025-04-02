@@ -28,7 +28,7 @@ st.markdown("""
     .responsive-button {
         background-color: transparent;
         color: #0366d6;
-        padding: 7px 24px;
+        padding: 8px 24px;
         border: 1px dashed #0366d6;
         border-radius: 6px;
         font-size: 16px;
@@ -45,7 +45,7 @@ st.markdown("""
     .pdf-button {
         background-color: transparent;
         color: #4CAF50;
-        padding: 7px 24px;
+        padding: 8px 24px;
         border: 1px dashed #4CAF50;
         border-radius: 6px;
         font-size: 16px;
@@ -80,7 +80,6 @@ original_search_groups = [
     {"groupName": "LGU", "keywords": ["LGU+", "유플러스", "유플"], "exclude": []},
 ]
 
-# session_state에 search_groups 유지
 if "search_groups" not in st.session_state:
     st.session_state.search_groups = original_search_groups.copy()
 
@@ -89,7 +88,6 @@ search_groups = st.session_state.search_groups
 if selected_tab == "검색트렌드":
     st.title("검색트렌드 분석")
 
-    # 📌 그룹별 검색어/제외어 수정 인터페이스 (태그형 + 적용 버튼)
     with st.expander("📋 그룹별 검색어/제외어 설정", expanded=False):
         group_inputs = {}
         for group in original_search_groups:
@@ -122,47 +120,46 @@ if selected_tab == "검색트렌드":
             ]
             search_groups = st.session_state.search_groups
 
-    # 📅 날짜 및 버튼 한 줄에 배치 (정렬 개선)
     today = date.today()
     default_start = today - timedelta(days=7)
     default_end = today
 
     with st.container():
-        col1, col2, col3, col4 = st.columns([2.1, 2.1, 1, 1])
+        col1, col2, col3, col4 = st.columns([1.2, 1.2, 1, 1])
         with col1:
             start_date = st.date_input("시작일", value=default_start)
         with col2:
             end_date = st.date_input("종료일", value=default_end)
         with col3:
             st.markdown("""
-                <div style='padding-top: 28px;'>
-                <form action="#" method="post">
+                <div style='padding-top: 30px;'>
+                <form action="?run_analysis=1" method="post">
                     <input type="submit" value="🔍 분석 시작" class="responsive-button">
                 </form>
                 </div>
             """, unsafe_allow_html=True)
-            if st.session_state.get("force_run_analysis", False):
+            if st.query_params.get("run_analysis") == "1":
                 st.session_state.run_analysis = True
-                st.session_state.force_run_analysis = False
         with col4:
             st.markdown("""
-                <div style='padding-top: 28px;'>
+                <div style='padding-top: 30px;'>
                 <button onclick="window.print()" class="pdf-button">
                 📄 PDF 저장
                 </button>
                 </div>
             """, unsafe_allow_html=True)
 
-    # 이후 분석 및 시각화 코드 이어짐...
-
-
     if st.session_state.get("run_analysis", False):
+        st.session_state.run_analysis = False
+        st.experimental_rerun()
+
+    # ✅ 실제 분석 수행 후 결과 저장 (다른 탭에서도 재사용 가능하게)
+    if "trend_data" not in st.session_state:
         def get_date_range(start, end):
             return [(start + timedelta(days=i)).isoformat() for i in range((end - start).days + 1)]
 
         date_range = get_date_range(start_date, end_date)
 
-        # 검색 트렌드 API 호출
         trend_data = {}
         try:
             response = requests.post(
@@ -189,7 +186,6 @@ if selected_tab == "검색트렌드":
         except Exception as e:
             st.error(f"API 요청 실패: {e}")
 
-        # 언급량 수집 (뉴스+블로그)
         mention_data = {"labels": date_range, "datasets": []}
         group_mentions = {g["groupName"]: [] for g in search_groups}
 
@@ -226,13 +222,11 @@ if selected_tab == "검색트렌드":
         st.session_state.mention_data = mention_data
         st.session_state.group_mentions = group_mentions
 
-    # 세션에서 불러와서 시각화 유지
     trend_data = st.session_state.get("trend_data", {})
     mention_data = st.session_state.get("mention_data", {})
     group_mentions = st.session_state.get("group_mentions", {})
 
     if trend_data and mention_data:
-        # 그래프 그리기
         st.subheader("검색량 및 언급량 그래프")
         gcol1, gcol2 = st.columns(2)
 
@@ -276,7 +270,6 @@ if selected_tab == "검색트렌드":
                 ))
             st.plotly_chart(fig2, use_container_width=True)
 
-        # 뉴스·블로그 문장 4열 출력
         st.subheader("실시간 뉴스·블로그 문장 리스트")
         cols = st.columns(4)
         for idx, group in enumerate(search_groups):
