@@ -229,10 +229,11 @@ elif selected_tab == "연관어 분석":
             word_data[sheet] = df
 
         morph_df = pd.read_excel(morpheme_analysis_xlsx, sheet_name=None)
-        all_sentences = pd.concat(morph_df.values())
+        all_sentences = pd.concat(morph_df.values(), ignore_index=True)
         return word_data, all_sentences
 
     word_data, sentence_df = load_word_and_sentence_data()
+
 
     left_col, right_col = st.columns([2, 1])
 
