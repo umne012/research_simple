@@ -106,7 +106,7 @@ if selected_tab == "검색트렌드":
                     <input type="submit" value="🔍 분석 시작" style="
                         background-color: #0366d6;
                         color: white;
-                        padding: 10px 20px;
+                        padding: 8px 25px;
                         border: none;
                         border-radius: 6px;
                         font-size: 16px;
@@ -123,7 +123,7 @@ if selected_tab == "검색트렌드":
                 <button onclick="window.print()" style="
                     background-color: #4CAF50;
                     color: white;
-                    padding: 10px 20px;
+                    padding: 8px 25px;
                     border: none;
                     border-radius: 6px;
                     font-size: 16px;
