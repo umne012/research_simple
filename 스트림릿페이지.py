@@ -55,13 +55,6 @@ search_groups = st.session_state.search_groups
 if selected_tab == "검색트렌드":
     st.title("검색트렌드 분석")
 
-    # 📅 날짜 입력 (한 줄에 배치)
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        start_date = st.date_input("시작일", value=date(2025, 3, 12))
-    with col2:
-        end_date = st.date_input("종료일", value=date(2025, 3, 18))
-
     # 📌 그룹별 검색어/제외어 수정 인터페이스 (태그형 + 적용 버튼)
     with st.expander("📋 그룹별 검색어/제외어 설정", expanded=False):
         group_inputs = {}
@@ -95,25 +88,32 @@ if selected_tab == "검색트렌드":
             ]
             search_groups = st.session_state.search_groups
 
-    # ✅ 분석 버튼 별도 배치
-    if st.button("🔍 검색량 및 언급량 분석 시작"):
-        st.session_state.run_analysis = True
-
-    # ✅ PDF 저장 버튼
-    st.markdown("""
-        <br>
-        <button onclick="window.print()" style="
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-        ">
-        📄 이 페이지를 PDF로 저장
-        </button>
+    # 📅 날짜 및 버튼 한 줄에 배치
+    d1, d2, b1, b2 = st.columns([1, 1, 1, 1])
+    with d1:
+        start_date = st.date_input("시작일", value=date(2025, 3, 12))
+    with d2:
+        end_date = st.date_input("종료일", value=date(2025, 3, 18))
+    with b1:
+        if st.button("🔍 분석"):
+            st.session_state.run_analysis = True
+    with b2:
+        st.markdown("""
+            <br>
+            <button onclick="window.print()" style="
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 6px;
+                font-size: 16px;
+                cursor: pointer;
+            ">
+            📄 PDF로 저장
+            </button>
         """, unsafe_allow_html=True)
+
+
 
     if st.session_state.get("run_analysis", False):
         def get_date_range(start, end):
