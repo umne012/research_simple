@@ -14,24 +14,45 @@ st.markdown("""
     * {
         font-family: 'Pretendard', sans-serif;
     }
-    div.stButton > button {
+
+    /* 🔍 분석 버튼 (붉은 강조) - 첫 번째 st.button */
+    div.stButton:nth-of-type(1) > button {
         background-color: transparent;
-        color: #0366d6;
+        color: #FA8072;
         padding: 7px 24px;
-        border: 1px dashed #0366d6;
+        border: 1px dashed #FA8072;
         border-radius: 6px;
         font-size: 16px;
         width: 100%;
         cursor: pointer;
         transition: all 0.3s ease;
     }
-    div.stButton > button:hover {
-        background-color: #0366d6;
+    div.stButton:nth-of-type(1) > button:hover {
+        background-color: #FA8072;
         color: white;
-        border-style: solid;
+        border: 1px solid #FA8072;
+    }
+
+    /* 📄 PDF 저장 버튼 (hover 초록 강조) */
+    button.pdf-btn {
+        background-color: transparent;
+        color: #4CAF50;
+        padding: 7px 24px;
+        border: 1px dashed #4CAF50;
+        border-radius: 6px;
+        font-size: 16px;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    button.pdf-btn:hover {
+        background-color: #4CAF50;
+        color: white;
+        border: 1px solid #4CAF50;
     }
     </style>
 """, unsafe_allow_html=True)
+
 
 # ✅ 사이드 메뉴
 with st.sidebar:
@@ -96,21 +117,12 @@ if selected_tab == "검색트렌드":
     with col4:
         st.markdown("""
             <div style='padding-top: 28px;'>
-                <button onclick="window.print()" style="
-                    background-color: transparent;
-                    color: #4CAF50;
-                    padding: 7px 24px;
-                    border: 1px dashed #4CAF50;
-                    border-radius: 6px;
-                    font-size: 16px;
-                    width: 100%;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                ">
+                <button onclick="window.print()" class="pdf-btn">
                     📄 PDF 저장
                 </button>
             </div>
         """, unsafe_allow_html=True)
+
 
     # ✅ run_analysis 클릭 시 분석 수행
     if run_analysis:
