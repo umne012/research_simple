@@ -141,36 +141,13 @@ if selected_tab == "검색트렌드":
 
     # ✅ PDF 저장 버튼
     with col4:
-        components.html(
-            """
-            <html>
-            <head>
-                <style>
-                    .pdf-btn {
-                        background-color: transparent;
-                        color: #4CAF50;
-                        padding: 7px 24px;
-                        border: 1px dashed #4CAF50;
-                        border-radius: 6px;
-                        font-size: 16px;
-                        width: 100%;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    }
-                    .pdf-btn:hover {
-                        background-color: #4CAF50;
-                        color: white;
-                        border: 1px solid #4CAF50;
-                    }
-                </style>
-            </head>
-            <body>
-                <button class="pdf-btn" onclick="window.parent.print()">📄 PDF 저장</button>
-            </body>
-            </html>
-            """,
-            height=60,
-        )
+        st.markdown("""
+            <div style='padding-top: 28px;'>
+                <button onclick="window.print()" class="pdf-btn">
+                    📄 PDF 저장
+                </button>
+            </div>
+        """, unsafe_allow_html=True)
 
 
 
