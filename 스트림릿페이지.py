@@ -46,7 +46,11 @@ original_search_groups = [
     {"groupName": "LGU", "keywords": ["LGU+", "유플러스", "유플"], "exclude": []},
 ]
 
-search_groups = original_search_groups.copy()
+# session_state에 search_groups 유지
+if "search_groups" not in st.session_state:
+    st.session_state.search_groups = original_search_groups.copy()
+
+search_groups = st.session_state.search_groups
 
 if selected_tab == "검색트렌드":
     st.title("검색트렌드 분석")
@@ -81,7 +85,7 @@ if selected_tab == "검색트렌드":
             }
 
         if st.button("🔁 설정 적용"):
-            search_groups = [
+            st.session_state.search_groups = [
                 {
                     "groupName": name,
                     "keywords": values["keywords"],
@@ -89,10 +93,27 @@ if selected_tab == "검색트렌드":
                 }
                 for name, values in group_inputs.items()
             ]
+            search_groups = st.session_state.search_groups
 
     # ✅ 분석 버튼 별도 배치
     if st.button("🔍 검색량 및 언급량 분석 시작"):
-        st.session_state["run_analysis"] = True
+        st.session_state.run_analysis = True
+
+    # ✅ PDF 저장 버튼
+    st.markdown("""
+        <br>
+        <button onclick="window.print()" style="
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        ">
+        📄 이 페이지를 PDF로 저장
+        </button>
+        """, unsafe_allow_html=True)
 
     if st.session_state.get("run_analysis", False):
         def get_date_range(start, end):
@@ -121,6 +142,7 @@ if selected_tab == "검색트렌드":
             )
             if response.ok:
                 trend_data = response.json()
+                st.session_state.trend_data = trend_data
             else:
                 st.error(f"검색 트렌드 오류: {response.status_code}")
         except Exception as e:
@@ -160,6 +182,15 @@ if selected_tab == "검색트렌드":
                     values.append(total_mentions)
                 mention_data["datasets"].append({"label": group["groupName"], "data": values})
 
+        st.session_state.mention_data = mention_data
+        st.session_state.group_mentions = group_mentions
+
+    # 세션에서 불러와서 시각화 유지
+    trend_data = st.session_state.get("trend_data", {})
+    mention_data = st.session_state.get("mention_data", {})
+    group_mentions = st.session_state.get("group_mentions", {})
+
+    if trend_data and mention_data:
         # 그래프 그리기
         st.subheader("검색량 및 언급량 그래프")
         gcol1, gcol2 = st.columns(2)
@@ -204,13 +235,13 @@ if selected_tab == "검색트렌드":
                 ))
             st.plotly_chart(fig2, use_container_width=True)
 
-        # 뉴스·블로그 문장 4열 출력 (스타일 개선)
+        # 뉴스·블로그 문장 4열 출력
         st.subheader("실시간 뉴스·블로그 문장 리스트")
         cols = st.columns(4)
         for idx, group in enumerate(search_groups):
             with cols[idx % 4]:
                 st.markdown(f"<h4 style='text-align:center; color:#0366d6'>{group['groupName']}</h4>", unsafe_allow_html=True)
-                for item in group_mentions[group['groupName']][:10]:
+                for item in group_mentions.get(group['groupName'], [])[:10]:
                     st.markdown(f"""
                     <div style='border:1px solid #eee; padding:10px; margin-bottom:8px; border-radius:8px; background-color:#fafafa;'>
                         <a href="{item['link']}" target="_blank" style="text-decoration:none; color:#333; font-weight:500;">
