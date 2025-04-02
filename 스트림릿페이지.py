@@ -214,26 +214,34 @@ if selected_tab == "검색트렌드":
                     </div>
                     ''', unsafe_allow_html=True)
 
+
 elif selected_tab == "연관어 분석":
     st.title("📌 연관어 네트워크 분석")
 
-    word_count_xlsx = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count.xlsx"
-    morpheme_analysis_xlsx = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis.xlsx"
+    import requests
+    from io import BytesIO
 
     @st.cache_data
     def load_word_and_sentence_data():
         word_data = {}
-        xls = pd.ExcelFile(word_count_xlsx)
-        for sheet in xls.sheet_names:
-            df = pd.read_excel(xls, sheet_name=sheet)
+
+        # 🔗 GitHub 파일 불러오기
+        word_response = requests.get("https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count.xlsx")
+        morph_response = requests.get("https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis.xlsx")
+
+        word_xls = pd.ExcelFile(BytesIO(word_response.content))
+        for sheet in word_xls.sheet_names:
+            df = pd.read_excel(word_xls, sheet_name=sheet)
             word_data[sheet] = df
 
-        morph_df = pd.read_excel(morpheme_analysis_xlsx, sheet_name=None)
+        morph_df = pd.read_excel(BytesIO(morph_response.content), sheet_name=None)
         all_sentences = pd.concat(morph_df.values(), ignore_index=True)
         return word_data, all_sentences
 
     word_data, sentence_df = load_word_and_sentence_data()
 
+    from pyvis.network import Network
+    import streamlit.components.v1 as components
 
     left_col, right_col = st.columns([2, 1])
 
@@ -285,16 +293,20 @@ elif selected_tab == "연관어 분석":
         st.markdown("노드를 클릭하면 해당 단어가 포함된 문장이 여기에 표시됩니다.")
         st.markdown("<div id='sentence-list'></div>", unsafe_allow_html=True)
 
+        # sentence_map을 JSON 문자열로 전달하고, 클릭된 nodeId로 문장 정보 동적 표시
         st.components.v1.html(f"""
         <script>
         const sentenceData = {json.dumps(sentence_map)};
-        const container = window.parent.document.querySelector('#sentence-list');
         window.addEventListener('message', (e) => {{
             const nodeId = e.data;
+            const container = window.parent.document.querySelector('#sentence-list');
+            if (!container) return;
             if (sentenceData[nodeId]) {{
                 let html = '';
                 sentenceData[nodeId].forEach((s, i) => {{
-                    html += `<div style='margin-bottom:8px;'><a href='${{s["원본링크"]}}' target='_blank'>🔗 문장ID: ${{s["문장ID"]}} (${{s["단어"]}})</a></div>`;
+                    html += `<div style='margin-bottom:8px;'>
+                        <a href='${{s["원본링크"]}}' target='_blank'>🔗 문장ID: ${{s["문장ID"]}} (${{s["단어"]}})</a>
+                    </div>`;
                 }});
                 container.innerHTML = html;
             }}
