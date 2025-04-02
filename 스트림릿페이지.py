@@ -218,30 +218,24 @@ if selected_tab == "검색트렌드":
 elif selected_tab == "연관어 분석":
     st.title("📌 연관어 네트워크 분석")
 
-    from io import BytesIO
-    import requests
-    import pandas as pd
-    
     @st.cache_data
     def load_word_and_sentence_data():
         word_data = {}
     
-        # ✅ 정확한 raw URL로 교체
-        word_response = requests.get("https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count.xlsx")
-        morph_response = requests.get("https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis.xlsx")
-    
-        # ✅ openpyxl 명시하고 BytesIO 사용
-        word_xls = pd.ExcelFile(BytesIO(word_response.content), engine="openpyxl")
+        # ▶️ 같은 디렉토리에 있는 로컬 엑셀 파일 직접 로드
+        word_xls = pd.ExcelFile("morpheme_word_count.xlsx", engine="openpyxl")
         for sheet in word_xls.sheet_names:
             df = pd.read_excel(word_xls, sheet_name=sheet, engine="openpyxl")
             word_data[sheet] = df
     
-        morph_df = pd.read_excel(BytesIO(morph_response.content), sheet_name=None, engine="openpyxl")
+        morph_df = pd.read_excel("morpheme_analysis.xlsx", sheet_name=None, engine="openpyxl")
         all_sentences = pd.concat(morph_df.values(), ignore_index=True)
     
         return word_data, all_sentences
-        
+    
+    # 📦 캐시된 데이터 로딩
     word_data, sentence_df = load_word_and_sentence_data()
+
 
     from pyvis.network import Network
     import streamlit.components.v1 as components
