@@ -10,13 +10,14 @@ import streamlit.components.v1 as components
 st.set_page_config(layout="wide")
 
 # ✅ 전체 스타일 적용
+# 가장 위쪽에 삽입 (스타일 + printPage 함수 포함)
 st.markdown("""
     <style>
     * {
         font-family: 'Pretendard', sans-serif;
     }
 
-    /* 🔍 분석 버튼 (붉은 강조) - 첫 번째 st.button */
+    /* 분석 버튼 */
     div.stButton:nth-of-type(1) > button {
         background-color: transparent;
         color: #FA8072;
@@ -34,7 +35,7 @@ st.markdown("""
         border: 1px solid #FA8072;
     }
 
-    /* 📄 PDF 저장 버튼 */
+    /* PDF 버튼 */
     button.pdf-btn {
         background-color: transparent;
         color: #4CAF50;
@@ -52,15 +53,18 @@ st.markdown("""
         border: 1px solid #4CAF50;
     }
 
-    /* ✅ 인쇄 전용 스타일 */
+    /* 인쇄 전용 */
     @media print {
-        header, footer, .sidebar, .stButton, .css-1y4p8pa, .pdf-btn {
+        .sidebar, header, footer, .stButton, .pdf-btn, .block-container button, .css-1rs6os {
             display: none !important;
         }
-        .main {
-            padding: 0 !important;
-            margin: 0 !important;
+        .main, .block-container {
             width: 100% !important;
+            margin: 0 !important;
+            padding: 0 40px !important;
+        }
+        .element-container {
+            overflow: visible !important;
         }
         body {
             background: white !important;
@@ -78,6 +82,7 @@ st.markdown("""
     }
     </script>
 """, unsafe_allow_html=True)
+
 
 
 # ✅ 사이드 메뉴
@@ -143,11 +148,10 @@ if selected_tab == "검색트렌드":
     with col4:
         st.markdown("""
             <div style='padding-top: 28px;'>
-                <button onclick="window.print()" class="pdf-btn">
-                    📄 PDF 저장
-                </button>
+                <button class="pdf-btn" onclick="printPage()">📄 PDF 저장</button>
             </div>
         """, unsafe_allow_html=True)
+
 
 
 
