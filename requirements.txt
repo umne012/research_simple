@@ -5,3 +5,4 @@ plotly
 streamlit_option_menu
 streamlit-tags
 pyvis
+openpyxl
