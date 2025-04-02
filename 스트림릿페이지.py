@@ -229,15 +229,17 @@ elif selected_tab == "연관어 분석":
         word_response = requests.get("https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count.xlsx")
         morph_response = requests.get("https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis.xlsx")
 
-        word_xls = pd.ExcelFile(BytesIO(word_response.content))
+        # ⛏️ engine="openpyxl" 명시
+        word_xls = pd.ExcelFile(BytesIO(word_response.content), engine="openpyxl")
         for sheet in word_xls.sheet_names:
-            df = pd.read_excel(word_xls, sheet_name=sheet)
+            df = pd.read_excel(word_xls, sheet_name=sheet, engine="openpyxl")
             word_data[sheet] = df
 
-        morph_df = pd.read_excel(BytesIO(morph_response.content), sheet_name=None)
+        morph_df = pd.read_excel(BytesIO(morph_response.content), sheet_name=None, engine="openpyxl")
         all_sentences = pd.concat(morph_df.values(), ignore_index=True)
-        return word_data, all_sentences
 
+        return word_data, all_sentences
+        
     word_data, sentence_df = load_word_and_sentence_data()
 
     from pyvis.network import Network
