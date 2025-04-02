@@ -116,20 +116,14 @@ if selected_tab == "검색트렌드":
 
     # ✅ PDF 저장 버튼
     with col4:
-        st.markdown("<div style='padding-top: 28px;'>", unsafe_allow_html=True)
-        components.html(
-            """
-            <script>
-            function printPDF() {
-                window.print();
-            }
-            </script>
-            <button onclick="printPDF()" class="pdf-btn">
-                📄 PDF 저장
-            </button>
-            """,
-            height=50,
-        )
+        st.markdown("""
+            <div style='padding-top: 28px;'>
+                <button onclick="window.print()" class="pdf-btn">
+                    📄 PDF 저장
+                </button>
+            </div>
+        """, unsafe_allow_html=True)
+
 
 
     # ✅ run_analysis 클릭 시 분석 수행
