@@ -8,7 +8,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# ✅ 스타일 + printPage() 함수
+# ✅ 스타일 제거된 버전 (PDF 버튼 제거됨)
 st.markdown("""
 <style>
 * {
@@ -32,50 +32,7 @@ div.stButton:nth-of-type(1) > button:hover {
     color: white;
     border: 1px solid #FA8072;
 }
-
-/* 인쇄 버튼 */
-button.pdf-btn {
-    background-color: transparent;
-    color: #4CAF50;
-    padding: 7px 24px;
-    border: 1px dashed #4CAF50;
-    border-radius: 6px;
-    font-size: 16px;
-    width: 100%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-button.pdf-btn:hover {
-    background-color: #4CAF50;
-    color: white;
-    border: 1px solid #4CAF50;
-}
-
-@media print {
-    .css-1lcbmhc, .css-h5rgaw, header, footer, .stSidebar, .sidebar, .css-1rs6os, .css-1vq4p4l {
-        display: none !important;
-    }
-    .main, .block-container {
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 40px !important;
-    }
-    body {
-        background: white !important;
-        zoom: 0.5; /* 💡 브라우저 호환성에 따라 동작 여부 다름 */
-    }
-    a {
-        color: #0366d6 !important;
-        text-decoration: underline !important;
-    }
-}
 </style>
-
-<script>
-function printPage() {
-    window.parent.print();
-}
-</script>
 """, unsafe_allow_html=True)
 
 # ✅ 사이드 메뉴
@@ -121,7 +78,7 @@ if selected_tab == "검색트렌드":
     default_start = today - timedelta(days=7)
     default_end = today
 
-    col1, col2, col3, col4 = st.columns([2.1, 2.1, 1, 1])
+    col1, col2, col3 = st.columns([2.1, 2.1, 1])
     with col1:
         start_date = st.date_input("시작일", value=default_start)
     with col2:
@@ -130,14 +87,6 @@ if selected_tab == "검색트렌드":
         st.markdown("<div style='padding-top: 28px;'>", unsafe_allow_html=True)
         run_analysis = st.button("\U0001F50D 분석 시작", key="run_button")
         st.markdown("</div>", unsafe_allow_html=True)
-    with col4:
-        components.html("""
-        <html>
-        <body>
-            <button class="pdf-btn" onclick="printPage()">\ud83d\udcc4 PDF 저장</button>
-        </body>
-        </html>
-        """, height=60)
 
     if run_analysis:
         def get_date_range(start, end):
