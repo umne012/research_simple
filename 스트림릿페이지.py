@@ -101,12 +101,12 @@ if selected_tab == "검색트렌드":
             end_date = st.date_input("종료일", value=default_end)
         with col3:
             st.markdown("""
-                <div style='padding-top: 20px;'>
+                <div style='padding-top: 22px;'>
                 <form action="#" method="post">
                     <input type="submit" value="🔍 분석 시작" style="
                         background-color: #0366d6;
                         color: white;
-                        padding: 10px 30px;
+                        padding: 10px 20px;
                         border: none;
                         border-radius: 6px;
                         font-size: 16px;
@@ -119,11 +119,11 @@ if selected_tab == "검색트렌드":
                 st.session_state.force_run_analysis = False
         with col4:
             st.markdown("""
-                <div style='padding-top: 20px;'>
+                <div style='padding-top: 22px;'>
                 <button onclick="window.print()" style="
                     background-color: #4CAF50;
                     color: white;
-                    padding: 10px 30px;
+                    padding: 10px 20px;
                     border: none;
                     border-radius: 6px;
                     font-size: 16px;
