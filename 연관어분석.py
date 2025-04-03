@@ -87,7 +87,7 @@ def show_relation_tab():
     svg {{ width: 75%; height: 600px; border: 1px solid #ccc; }}
     #sentence-panel {{
         width: 25%; padding: 10px; background: #f9f9f9;
-        border-left: 1px solid #ddd; overflow-y: auto; height: 590px;
+        border-left: 1px solid #ddd; overflow-y: auto; height: 580px;
     }}
     h3 {{ margin-top: 0; }}
     .text-link {{ margin-bottom: 12px; display: block; font-size: 11px; }}
