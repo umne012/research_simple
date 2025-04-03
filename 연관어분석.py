@@ -185,7 +185,7 @@ node.on("click", (event, d) => {{
     }}
     panel.innerHTML = data.map(s => `
         <a class="text-link" href="${{s['원본링크']}}" target="_blank">
-            ${['문장']}
+            ${{s['문장']}}
         </a>
     `).join("");
 }});
