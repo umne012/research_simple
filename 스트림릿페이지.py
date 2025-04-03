@@ -220,37 +220,35 @@ import requests
 from io import BytesIO
 import streamlit as st
 
-@st.cache_data
-def load_word_and_sentence_data():
-    word_data = {}
 
-    # GitHub raw 링크로부터 엑셀 파일 다운로드
-    word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_recovered.xlsx"
-    morph_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_recovered.xlsx"
+elif selected_tab == "연관어 분석":
+    st.title("📌 연관어 네트워크 분석")
 
-    word_response = requests.get(word_url)
-    morph_response = requests.get(morph_url)
+    @st.cache_data
+    def load_word_and_sentence_data():
+        word_data = {}
 
-    # 응답이 정상인지 체크
-    word_response.raise_for_status()
-    morph_response.raise_for_status()
+        # GitHub raw 링크로부터 엑셀 파일 다운로드
+        word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_recovered.xlsx"
+        morph_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_recovered.xlsx"
 
-    # BytesIO로 읽고 openpyxl 엔진으로 처리
-    word_xls = pd.ExcelFile(BytesIO(word_response.content), engine="openpyxl")
-    for sheet in word_xls.sheet_names:
-        df = pd.read_excel(word_xls, sheet_name=sheet, engine="openpyxl")
-        word_data[sheet] = df
+        word_response = requests.get(word_url)
+        morph_response = requests.get(morph_url)
 
-    morph_df = pd.read_excel(BytesIO(morph_response.content), sheet_name=None, engine="openpyxl")
-    all_sentences = pd.concat(morph_df.values(), ignore_index=True)
+        word_response.raise_for_status()
+        morph_response.raise_for_status()
 
-    return word_data, all_sentences
+        word_xls = pd.ExcelFile(BytesIO(word_response.content), engine="openpyxl")
+        for sheet in word_xls.sheet_names:
+            df = pd.read_excel(word_xls, sheet_name=sheet, engine="openpyxl")
+            word_data[sheet] = df
 
+        morph_df = pd.read_excel(BytesIO(morph_response.content), sheet_name=None, engine="openpyxl")
+        all_sentences = pd.concat(morph_df.values(), ignore_index=True)
 
-# 호출
-word_data, sentence_df = load_word_and_sentence_data()
+        return word_data, all_sentences
 
-
+    word_data, sentence_df = load_word_and_sentence_data()
 
     from pyvis.network import Network
     import streamlit.components.v1 as components
@@ -305,7 +303,6 @@ word_data, sentence_df = load_word_and_sentence_data()
         st.markdown("노드를 클릭하면 해당 단어가 포함된 문장이 여기에 표시됩니다.")
         st.markdown("<div id='sentence-list'></div>", unsafe_allow_html=True)
 
-        # sentence_map을 JSON 문자열로 전달하고, 클릭된 nodeId로 문장 정보 동적 표시
         st.components.v1.html(f"""
         <script>
         const sentenceData = {json.dumps(sentence_map)};
