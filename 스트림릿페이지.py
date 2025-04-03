@@ -11,7 +11,7 @@ if "selected_tab" not in st.session_state:
 # ✅ 사이드 메뉴
 with st.sidebar:
     selected_tab = option_menu(
-        menu_title="📊 브랜드 리서치",
+        menu_title="브랜드 리서치",
         options=["검색트렌드", "연관어 분석", "긍부정 분석"],
         icons=["bar-chart", "graph-up", "emoji-smile"],
         menu_icon="cast",
