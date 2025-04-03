@@ -298,8 +298,7 @@ elif selected_tab == "연관어 분석":
     
         return word_data, sentence_df
 
-
-     from pyvis.network import Network
+    from pyvis.network import Network
     import streamlit.components.v1 as components
     import json
 
