@@ -90,7 +90,7 @@ def show_relation_tab():
         border-left: 1px solid #ddd; overflow-y: auto; height: 600px;
     }}
     h3 {{ margin-top: 0; }}
-    .text-link {{ margin-bottom: 12px; display: block; font-size: 14px; }}
+    .text-link {{ margin-bottom: 12px; display: block; font-size: 10px; }}
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     </head>
@@ -110,7 +110,7 @@ def show_relation_tab():
     const svg = d3.select("svg");
     
     const simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).id(d => d.id).distance(120))
+        .force("link", d3.forceLink(links).id(d => d.id).distance(80))
         .force("charge", d3.forceManyBody().strength(-300))
         .force("center", d3.forceCenter(width / 2, height / 2));
     
