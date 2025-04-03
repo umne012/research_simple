@@ -1,5 +1,9 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
+from 검색트렌드 import show_trend_tab
+from 연관어분석 import show_relation_tab
+
+# ✅ 페이지 구성은 반드시 첫 줄에서만 호출
 st.set_page_config(layout="wide")
 
 # ✅ 탭 선택 상태 유지
@@ -19,12 +23,10 @@ with st.sidebar:
 
 # ✅ 탭별 기능 호출
 if selected_tab == "검색트렌드":
-    from 검색트렌드 import show_trend_tab
-    show_trend_tab(st)
+    show_trend_tab()  # ✅ st 넘기지 않음
 
 elif selected_tab == "연관어 분석":
-    from 연관어분석 import show_network_tab
-    show_network_tab(st)
+    show_relation_tab()
 
 elif selected_tab == "긍부정 분석":
     st.title("🙂 긍·부정 분석 (개발 예정)")
