@@ -110,10 +110,11 @@ def show_relation_tab():
     const svg = d3.select("svg");
     
     const simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).id(d => d.id).distance(80))
-        .force("charge", d3.forceManyBody().strength(-300))
-        .force("center", d3.forceCenter(width / 2, height / 2));
-    
+        .force("link", d3.forceLink(links).id(d => d.id).distance(50))
+        .force("charge", d3.forceManyBody().strength(-100))
+        .force("center", d3.forceCenter(width / 3, height / 3));
+        .alphaDecay(0.05);  // ⬅ 빨리 멈추도록
+        
     const linkCount = {{}};
     links.forEach(l => {{
         linkCount[l.target] = (linkCount[l.target] || 0) + 1;
