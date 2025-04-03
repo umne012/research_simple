@@ -5,9 +5,10 @@ from io import StringIO
 from pyvis.network import Network
 import streamlit.components.v1 as components
 import json
-import tempfile
+import os
+import uuid
 
-def show_relation_tab():
+def show_network_tab():
     st.title("📌 연관어 네트워크 분석")
 
     @st.cache_data
@@ -80,17 +81,21 @@ def show_relation_tab():
 
                 net.add_edge(brand, node_id, weight=freq)
 
-        # ✅ 고유한 임시파일에 저장 → 캐시 충돌 및 덮어쓰기 방지
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_file:
-            net.save_graph(tmp_file.name)
-            components.iframe(tmp_file.name, height=750, scrolling=True)
+        # ✅ HTML을 임시 파일로 저장 후 읽어서 삽입
+        temp_filename = f"network_graph_{uuid.uuid4().hex}.html"
+        net.save_graph(temp_filename)
+        with open(temp_filename, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        os.remove(temp_filename)
+
+        # ✅ iframe이 아니라 HTML 내용 직접 렌더링 (Streamlit 구조 섞이는 것 방지)
+        components.html(html_content, height=750, scrolling=True)
 
     with right_col:
         st.subheader("📝 단어 관련 문장 보기")
         st.markdown("노드를 클릭하면 해당 단어가 포함된 문장이 여기에 표시됩니다.")
         st.markdown("<div id='sentence-list'></div>", unsafe_allow_html=True)
 
-        # sentence_map을 JSON 문자열로 전달하고, 클릭된 nodeId로 문장 정보 동적 표시
         st.components.v1.html(f"""
         <script>
         const sentenceData = {json.dumps(sentence_map)};
