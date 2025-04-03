@@ -4,12 +4,11 @@ import requests
 import plotly.graph_objects as go
 from streamlit_option_menu import option_menu
 from streamlit_tags import st_tags
-from io import BytesIO
+from io import BytesIO, StringIO
 import pandas as pd
 import json
 from pyvis.network import Network
 import streamlit.components.v1 as components
-import time
 
 st.set_page_config(layout="wide")
 
@@ -20,7 +19,6 @@ st.markdown("""
         font-family: 'Pretendard', sans-serif;
     }
 
-    /* 🔍 분석 버튼 (붉은 강조) - 첫 번째 st.button */
     div.stButton:nth-of-type(1) > button {
         background-color: transparent;
         color: #FA8072;
@@ -38,7 +36,6 @@ st.markdown("""
         border: 1px solid #FA8072;
     }
 
-    /* 📄 PDF 저장 버튼 (hover 초록 강조) */
     button.pdf-btn {
         background-color: transparent;
         color: #4CAF50;
@@ -57,7 +54,6 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
-
 
 # ✅ 사이드 메뉴
 with st.sidebar:
@@ -79,13 +75,12 @@ original_search_groups = [
 
 if "search_groups" not in st.session_state:
     st.session_state.search_groups = original_search_groups.copy()
-
 search_groups = st.session_state.search_groups
 
+# ✅ 검색트렌드 탭
 if selected_tab == "검색트렌드":
     st.title("검색트렌드 분석")
 
-    # ✅ 검색어/제외어 설정
     with st.expander("📋 그룹별 검색어/제외어 설정", expanded=False):
         group_inputs = {}
         for group in original_search_groups:
@@ -101,43 +96,32 @@ if selected_tab == "검색트렌드":
             ]
             search_groups = st.session_state.search_groups
 
-    # ✅ 날짜 선택
     today = date.today()
     default_start = today - timedelta(days=7)
     default_end = today
 
-    col1, col2, col3, col4 = st.columns([2.1, 2.1, 1, 1])
+    start_date = st.date_input("시작일", value=st.session_state.get("start_date", default_start))
+    end_date = st.date_input("종료일", value=st.session_state.get("end_date", default_end))
+
+    col1, col2 = st.columns([1, 1])
     with col1:
-        start_date = st.date_input("시작일", value=default_start)
-    with col2:
-        end_date = st.date_input("종료일", value=default_end)
-
-    # ✅ 분석 시작 버튼 → rerun 없이 바로 실행
-    with col3:
-        st.markdown("<div style='padding-top: 28px;'>", unsafe_allow_html=True)
         run_analysis = st.button("🔍 분석 시작", key="run_button")
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # ✅ PDF 저장 버튼
-    with col4:
+    with col2:
         st.markdown("""
-            <div style='padding-top: 28px;'>
-                <button onclick="window.print()" class="pdf-btn">
-                    📄 PDF 저장
-                </button>
-            </div>
+        <button onclick="window.print()" class="pdf-btn">
+            📄 PDF 저장
+        </button>
         """, unsafe_allow_html=True)
 
-
-
-    # ✅ run_analysis 클릭 시 분석 수행
     if run_analysis:
+        st.session_state.start_date = start_date
+        st.session_state.end_date = end_date
+
         def get_date_range(start, end):
             return [(start + timedelta(days=i)).isoformat() for i in range((end - start).days + 1)]
 
         date_range = get_date_range(start_date, end_date)
 
-        trend_data = {}
         try:
             response = requests.post(
                 "https://openapi.naver.com/v1/datalab/search",
@@ -156,13 +140,13 @@ if selected_tab == "검색트렌드":
                 },
             )
             if response.ok:
-                trend_data = response.json()
-                st.session_state.trend_data = trend_data
+                st.session_state.trend_data = response.json()
             else:
                 st.error(f"검색 트렌드 오류: {response.status_code}")
         except Exception as e:
             st.error(f"API 요청 실패: {e}")
 
+        date_range = get_date_range(start_date, end_date)
         mention_data = {"labels": date_range, "datasets": []}
         group_mentions = {g["groupName"]: [] for g in search_groups}
 
@@ -199,10 +183,9 @@ if selected_tab == "검색트렌드":
         st.session_state.mention_data = mention_data
         st.session_state.group_mentions = group_mentions
 
-    # ✅ 시각화
-    trend_data = st.session_state.get("trend_data", {})
-    mention_data = st.session_state.get("mention_data", {})
-    group_mentions = st.session_state.get("group_mentions", {})
+    trend_data = st.session_state.get("trend_data")
+    mention_data = st.session_state.get("mention_data")
+    group_mentions = st.session_state.get("group_mentions")
 
     if trend_data and mention_data:
         st.subheader("검색량 및 언급량 그래프")
@@ -215,13 +198,7 @@ if selected_tab == "검색트렌드":
             margin=dict(l=40, r=40, t=60, b=100),
             xaxis=dict(title="날짜", showgrid=True),
             yaxis=dict(title="값", showgrid=True),
-            legend=dict(
-                orientation="h",
-                x=0.5,
-                y=-0.2,
-                xanchor="center",
-                yanchor="top"
-            )
+            legend=dict(orientation="h", x=0.5, y=-0.2, xanchor="center", yanchor="top")
         )
 
         with gcol1:
@@ -262,50 +239,27 @@ if selected_tab == "검색트렌드":
                     </div>
                     ''', unsafe_allow_html=True)
 
-
 # ✅ 연관어 분석 탭
 elif selected_tab == "연관어 분석":
     st.title("📌 연관어 네트워크 분석")
 
     @st.cache_data
     def load_word_and_sentence_data():
-        import pandas as pd
-        import requests
-        from io import StringIO
-    
-        # 👉 단어 카운트 데이터 (병합된 CSV)
         word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_merged.csv"
-        word_response = requests.get(word_url)
-        word_response.raise_for_status()
-        word_df = pd.read_csv(StringIO(word_response.text))
-    
-        # 👉 브랜드별로 분할
-        word_data = {
-            brand: df for brand, df in word_df.groupby("그룹")
-        }
-    
-        # 👉 감정 분석 CSV 파트별 불러오기
+        word_df = pd.read_csv(word_url)
+        word_data = {brand: df for brand, df in word_df.groupby("그룹")}
+
         parts = ["part1", "part2", "part3"]
         morph_frames = []
         for part in parts:
             url = f"https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_{part}.csv"
-            response = requests.get(url)
-            response.raise_for_status()
-            morph_frames.append(pd.read_csv(StringIO(response.text)))
-    
-        # 👉 전체 문장 데이터 합치기
+            morph_frames.append(pd.read_csv(url))
         sentence_df = pd.concat(morph_frames, ignore_index=True)
-    
         return word_data, sentence_df
-    # ✅ 데이터 로드
+
     word_data, sentence_df = load_word_and_sentence_data()
-    
-    from pyvis.network import Network
-    import streamlit.components.v1 as components
-    import json
 
     left_col, right_col = st.columns([2, 1])
-
     with left_col:
         net = Network(height="700px", width="100%", notebook=False, directed=False, bgcolor="#ffffff")
         added_word_nodes = {}
@@ -320,13 +274,11 @@ elif selected_tab == "연관어 분석":
                     word_entries.append((f"{word}_positive", row["positive"], "positive", word))
                 if row.get("negative", 0) > 0:
                     word_entries.append((f"{word}_negative", row["negative"], "negative", word))
-
             top_entries = sorted(word_entries, key=lambda x: x[1], reverse=True)[:10]
 
             for node_id, freq, sentiment, word in top_entries:
                 node_size = max(20, min(50, freq * 0.5))
                 color = "lightcoral" if sentiment == "positive" else "lightblue"
-
                 if node_id not in added_word_nodes:
                     net.add_node(
                         node_id,
@@ -338,11 +290,9 @@ elif selected_tab == "연관어 분석":
                         title=f"언급 횟수: {freq}"
                     )
                     added_word_nodes[node_id] = word
-
                     matched = sentence_df[(sentence_df["단어"] == word) & (sentence_df["감정"] == sentiment)]
                     sentences = matched[["문장ID", "단어", "원본링크"]].drop_duplicates().to_dict("records")
                     sentence_map[node_id] = sentences
-
                 net.add_edge(brand, node_id, weight=freq)
 
         net.force_atlas_2based(gravity=-50, central_gravity=0.02, spring_length=20, spring_strength=0.8)
@@ -353,8 +303,6 @@ elif selected_tab == "연관어 분석":
         st.subheader("📝 단어 관련 문장 보기")
         st.markdown("노드를 클릭하면 해당 단어가 포함된 문장이 여기에 표시됩니다.")
         st.markdown("<div id='sentence-list'></div>", unsafe_allow_html=True)
-
-        # sentence_map을 JSON 문자열로 전달하고, 클릭된 nodeId로 문장 정보 동적 표시
         st.components.v1.html(f"""
         <script>
         const sentenceData = {json.dumps(sentence_map)};
@@ -375,7 +323,6 @@ elif selected_tab == "연관어 분석":
         </script>
         """, height=0)
 
-# ✅ 긍부정 분석 탭
 elif selected_tab == "긍부정 분석":
     st.title("🙂 긍·부정 분석 (개발 예정)")
     st.info("이 탭은 준비 중입니다.")
