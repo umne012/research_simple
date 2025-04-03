@@ -9,15 +9,25 @@ def show_relation_tab():
 
     @st.cache_data
     def load_data():
-        word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_merged.csv"
-        word_df = pd.read_csv(StringIO(requests.get(word_url).text))
+        # 단어 카운트
+        word_df = pd.read_csv("https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_merged.csv")
         word_data = {brand: df for brand, df in word_df.groupby("그룹")}
 
-        merged_url = "https://raw.githubusercontent.com/umne012/research_simple/main/sentiment_analysis_merged.csv"
-        sentence_df = pd.read_csv(merged_url)
-        return word_data, sentence_df
+        # 형태소 분석 파일 통합
+        parts = ["part1", "part2", "part3"]
+        morph_frames = []
+        for part in parts:
+            url = f"https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_{part}.csv"
+            df = pd.read_csv(url)
+            morph_frames.append(df)
+        morph_df = pd.concat(morph_frames, ignore_index=True)
 
-    word_data, sentence_df = load_data()
+        # 문장 파일 (문장ID, 문장, 원본링크 포함)
+        sentiment_df = pd.read_csv("https://raw.githubusercontent.com/umne012/research_simple/main/sentiment_analysis_merged.csv")
+
+        return word_data, morph_df, sentiment_df
+
+    word_data, morph_df, sentiment_df = load_data()
 
     nodes, links, added_words = [], [], set()
     sentence_map = {}
@@ -37,8 +47,31 @@ def show_relation_tab():
             if node_id not in added_words:
                 nodes.append({"id": node_id, "group": sentiment, "freq": freq})
                 added_words.add(node_id)
-                match = sentence_df[(sentence_df["단어"] == word) & (sentence_df["감정"] == sentiment)]
-                sentence_map[node_id] = match[["문장", "원본링크"]].drop_duplicates().to_dict("records")
+
+                matched = morph_df[(morph_df["단어"] == word) & (morph_df["감정"] == sentiment)]
+                sentence_ids = matched["문장ID"].unique()
+                matched_sentences = sentiment_df[sentiment_df["문장ID"].isin(sentence_ids)]
+
+                results = []
+                for _, row in matched_sentences.iterrows():
+                    sentence = row["문장"]
+                    link = row["원본링크"]
+
+                    # 단어 강조 및 길이 축소
+                    if word in sentence:
+                        idx = sentence.index(word)
+                        start = max(0, idx - 15)
+                        end = min(len(sentence), idx + len(word) + 15)
+                        snippet = sentence[start:end]
+                        if start > 0:
+                            snippet = "..." + snippet
+                        if end < len(sentence):
+                            snippet = snippet + "..."
+                        snippet = snippet.replace(word, f"<b style='background:yellow'>{word}</b>")
+                        results.append({"문장": snippet, "원본링크": link})
+
+                sentence_map[node_id] = results
+
             links.append({"source": brand, "target": node_id})
             link_counter[node_id] = link_counter.get(node_id, 0) + 1
 
@@ -59,7 +92,7 @@ def show_relation_tab():
         border-left: 1px solid #ddd; overflow-y: auto; height: 600px;
     }}
     h3 {{ margin-top: 0; }}
-    .text-link {{ margin-bottom: 8px; display: block; font-size: 14px; }}
+    .text-link {{ margin-bottom: 12px; display: block; font-size: 14px; }}
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     </head>
@@ -73,11 +106,6 @@ def show_relation_tab():
     const nodes = {nodes_json};
     const links = {links_json};
     const sentenceData = {sentences_json};
-
-    const linkCount = {{}};
-    links.forEach(l => {{
-        linkCount[l.target] = (linkCount[l.target] || 0) + 1;
-    }});
 
     const width = document.querySelector("svg").clientWidth;
     const height = document.querySelector("svg").clientHeight;
@@ -93,7 +121,8 @@ def show_relation_tab():
         .data(links)
         .enter().append("line")
         .attr("stroke", "#aaa")
-        .attr("stroke-width", 2);
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", d => d.target && d.target.includes && d.target.includes("_") && {len(set(links.filter(l => l.target === d.target)))} > 1 ? "0" : "4,2");
 
     const node = svg.append("g")
         .selectAll("g")
@@ -155,7 +184,7 @@ def show_relation_tab():
         }}
         panel.innerHTML = data.map(s => `
             <a class="text-link" href="${{s['원본링크']}}" target="_blank">
-                ${{s['문장']}}
+                ${s['문장']}
             </a>
         `).join("");
     }});
