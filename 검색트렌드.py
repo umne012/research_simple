@@ -4,7 +4,8 @@ from datetime import date, timedelta
 import plotly.graph_objects as go
 from streamlit_tags import st_tags
 
-def show_trend_tab(st):
+
+def show_trend_tab():
     # ✅ 전체 스타일 적용
     st.markdown("""
         <style>
