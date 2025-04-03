@@ -82,11 +82,11 @@ def show_trend_tab():
             ]
             search_groups = st.session_state.search_groups
 
-    # ✅ 날짜 선택
+    # ✅ 날짜 선택 (기본값: 어제 ~ 7일 전)
     today = date.today()
-    default_start = today - timedelta(days=7)
-    default_end = today
-
+    default_end = today - timedelta(days=1)  # 어제
+    default_start = default_end - timedelta(days=7)
+    
     col1, col2, col3, col4 = st.columns([2.1, 2.1, 1, 1])
     with col1:
         start_date = st.date_input("시작일", value=default_start)
@@ -129,13 +129,14 @@ def show_trend_tab():
                 },
                 json={
                     "startDate": str(start_date),
-                    "endDate": str(end_date),
+                    "endDate": str(end_date + timedelta(days=1)),  # ✅ 하루 추가
                     "timeUnit": "date",
                     "keywordGroups": [
                         {"groupName": g["groupName"], "keywords": g["keywords"]} for g in search_groups
                     ],
                 },
             )
+
             if response.ok:
                 trend_data = response.json()
                 st.session_state.trend_data = trend_data
