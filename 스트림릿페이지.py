@@ -78,14 +78,13 @@ with st.sidebar:
         menu_icon="cast",
         default_index=["검색트렌드", "연관어 분석", "긍부정 분석"].index(st.session_state.selected_tab),
     )
-    # 업데이트된 탭 저장
     st.session_state.selected_tab = selected_tab
 
 # ✅ 세션 상태 사용
 search_groups = st.session_state.search_groups
 selected_tab = st.session_state.selected_tab
 
-# ✅ 탭별 기능 호출
+# ✅ 탭별 기능 호출 (선택된 탭일 때만 해당 모듈 실행)
 if selected_tab == "검색트렌드":
     from 검색트렌드 import show_trend_tab
     show_trend_tab(st, st_tags, date, timedelta, requests, go, search_groups)
