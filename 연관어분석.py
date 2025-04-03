@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import requests
@@ -6,6 +5,7 @@ from io import StringIO
 from pyvis.network import Network
 import streamlit.components.v1 as components
 import json
+import tempfile
 
 def show_relation_tab():
     st.title("📌 연관어 네트워크 분석")
@@ -80,9 +80,10 @@ def show_relation_tab():
 
                 net.add_edge(brand, node_id, weight=freq)
 
-        net.force_atlas_2based(gravity=-50, central_gravity=0.02, spring_length=20, spring_strength=0.8)
-        net.save_graph("network_graph.html")
-        components.iframe("network_graph.html", height=750, scrolling=True)
+        # ✅ 고유한 임시파일에 저장 → 캐시 충돌 및 덮어쓰기 방지
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_file:
+            net.save_graph(tmp_file.name)
+            components.iframe(tmp_file.name, height=750, scrolling=True)
 
     with right_col:
         st.subheader("📝 단어 관련 문장 보기")
