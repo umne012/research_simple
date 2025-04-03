@@ -6,11 +6,11 @@ from pyvis.network import Network
 import streamlit.components.v1 as components
 import json
 import os
-import uuid
 
-def show_network_tab():
+def show_relation_tab():
     st.title("📌 연관어 네트워크 분석")
 
+    # ✅ 데이터 불러오기
     @st.cache_data
     def load_word_and_sentence_data():
         # 👉 단어 카운트 데이터 (병합된 CSV)
@@ -35,7 +35,6 @@ def show_network_tab():
 
         # 👉 전체 문장 데이터 합치기
         sentence_df = pd.concat(morph_frames, ignore_index=True)
-
         return word_data, sentence_df
 
     word_data, sentence_df = load_word_and_sentence_data()
@@ -43,6 +42,7 @@ def show_network_tab():
     left_col, right_col = st.columns([2, 1])
 
     with left_col:
+        # ✅ 네트워크 그래프 생성
         net = Network(height="700px", width="100%", notebook=False, directed=False, bgcolor="#ffffff")
         added_word_nodes = {}
         sentence_map = {}
@@ -81,21 +81,22 @@ def show_network_tab():
 
                 net.add_edge(brand, node_id, weight=freq)
 
-        # ✅ HTML을 임시 파일로 저장 후 읽어서 삽입
-        temp_filename = f"network_graph_{uuid.uuid4().hex}.html"
-        net.save_graph(temp_filename)
-        with open(temp_filename, 'r', encoding='utf-8') as f:
-            html_content = f.read()
-        os.remove(temp_filename)
+        # ✅ 안전한 임시 경로에 저장
+        graph_path = "/tmp/network_graph.html"
+        net.force_atlas_2based(gravity=-50, central_gravity=0.02, spring_length=20, spring_strength=0.8)
+        net.save_graph(graph_path)
 
-        # ✅ iframe이 아니라 HTML 내용 직접 렌더링 (Streamlit 구조 섞이는 것 방지)
-        components.html(html_content, height=750, scrolling=True)
+        if os.path.exists(graph_path) and os.path.getsize(graph_path) > 0:
+            components.iframe(graph_path, height=750, scrolling=True)
+        else:
+            st.error("❌ 네트워크 그래프 HTML 생성에 실패했습니다.")
 
     with right_col:
         st.subheader("📝 단어 관련 문장 보기")
         st.markdown("노드를 클릭하면 해당 단어가 포함된 문장이 여기에 표시됩니다.")
         st.markdown("<div id='sentence-list'></div>", unsafe_allow_html=True)
 
+        # sentence_map을 JSON 문자열로 전달하고, 클릭된 nodeId로 문장 정보 동적 표시
         st.components.v1.html(f"""
         <script>
         const sentenceData = {json.dumps(sentence_map)};
