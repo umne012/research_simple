@@ -4,196 +4,194 @@ import requests
 from io import StringIO
 import json
 
-st.title("📌 연관어 분석")
+def show_relation_tab():
+    st.title("📌 연관어 분석")
 
-@st.cache_data
-def load_data():
-    word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_merged.csv"
-    word_df = pd.read_csv(StringIO(requests.get(word_url).text))
-    word_data = {brand: df for brand, df in word_df.groupby("그룹")}
+    @st.cache_data
+    def load_data():
+        word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_merged.csv"
+        word_df = pd.read_csv(StringIO(requests.get(word_url).text))
+        word_data = {brand: df for brand, df in word_df.groupby("그룹")}
 
-    parts = ["part1", "part2", "part3"]
-    sentence_frames = []
-    for part in parts:
-        url = f"https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_{part}.csv"
-        df = pd.read_csv(StringIO(requests.get(url).text))
-        sentence_frames.append(df)
-    sentence_df = pd.concat(sentence_frames, ignore_index=True)
-    return word_data, sentence_df
+        parts = ["part1", "part2", "part3"]
+        sentence_frames = []
+        for part in parts:
+            url = f"https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_{part}.csv"
+            df = pd.read_csv(StringIO(requests.get(url).text))
+            sentence_frames.append(df)
+        sentence_df = pd.concat(sentence_frames, ignore_index=True)
+        return word_data, sentence_df
 
-word_data, sentence_df = load_data()
+    word_data, sentence_df = load_data()
 
-# nodes & links 구성
-nodes, links, added_words = [], [], set()
-sentence_map = {}
-link_counter = {}
+    nodes, links, added_words = [], [], set()
+    sentence_map = {}
+    link_counter = {}
 
-for brand, df in word_data.items():
-    nodes.append({"id": brand, "group": "brand"})
-    word_entries = []
-    for _, row in df.iterrows():
-        word = row["단어"]
-        if row.get("positive", 0) > 0:
-            word_entries.append((f"{word}_positive", row["positive"], "positive", word))
-        if row.get("negative", 0) > 0:
-            word_entries.append((f"{word}_negative", row["negative"], "negative", word))
-    top_entries = sorted(word_entries, key=lambda x: x[1], reverse=True)[:10]
-    for node_id, freq, sentiment, word in top_entries:
-        if node_id not in added_words:
-            nodes.append({"id": node_id, "group": sentiment, "freq": freq})
-            added_words.add(node_id)
-            match = sentence_df[(sentence_df["단어"] == word) & (sentence_df["감정"] == sentiment)]
-            sentence_map[node_id] = match[["문장", "원본링크"]].drop_duplicates().to_dict("records")
-        links.append({"source": brand, "target": node_id})
-        link_counter[node_id] = link_counter.get(node_id, 0) + 1
+    for brand, df in word_data.items():
+        nodes.append({"id": brand, "group": "brand"})
+        word_entries = []
+        for _, row in df.iterrows():
+            word = row["단어"]
+            if row.get("positive", 0) > 0:
+                word_entries.append((f"{word}_positive", row["positive"], "positive", word))
+            if row.get("negative", 0) > 0:
+                word_entries.append((f"{word}_negative", row["negative"], "negative", word))
+        top_entries = sorted(word_entries, key=lambda x: x[1], reverse=True)[:10]
+        for node_id, freq, sentiment, word in top_entries:
+            if node_id not in added_words:
+                nodes.append({"id": node_id, "group": sentiment, "freq": freq})
+                added_words.add(node_id)
+                match = sentence_df[(sentence_df["단어"] == word) & (sentence_df["감정"] == sentiment)]
+                sentence_map[node_id] = match[["문장", "원본링크"]].drop_duplicates().to_dict("records")
+            links.append({"source": brand, "target": node_id})
+            link_counter[node_id] = link_counter.get(node_id, 0) + 1
 
-nodes_json = json.dumps(nodes)
-links_json = json.dumps(links)
-sentences_json = json.dumps(sentence_map, ensure_ascii=False)
+    nodes_json = json.dumps(nodes)
+    links_json = json.dumps(links)
+    sentences_json = json.dumps(sentence_map, ensure_ascii=False)
 
-# HTML 코드
-html_code = f"""
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<style>
-body {{ display: flex; font-family: Arial, sans-serif; }}
-svg {{ width: 75%; height: 600px; border: 1px solid #ccc; }}
-#sentence-panel {{
-    width: 25%; padding: 10px; background: #f9f9f9;
-    border-left: 1px solid #ddd; overflow-y: auto; height: 600px;
-}}
-h3 {{ margin-top: 0; }}
-.text-link {{ margin-bottom: 8px; display: block; font-size: 14px; }}
-</style>
-<script src="https://d3js.org/d3.v7.min.js"></script>
-</head>
-<body>
-<svg></svg>
-<div id="sentence-panel">
-    <h3>📝 관련 문장</h3>
-    <div id="sentences">노드를 클릭해보세요.</div>
-</div>
-<script>
-const nodes = {nodes_json};
-const links = {links_json};
-const sentenceData = {sentences_json};
-
-// 연결 수 세기
-const linkCount = {{}};
-links.forEach(l => {{
-    linkCount[l.target] = (linkCount[l.target] || 0) + 1;
-}});
-
-const width = document.querySelector("svg").clientWidth;
-const height = document.querySelector("svg").clientHeight;
-const svg = d3.select("svg");
-
-const simulation = d3.forceSimulation(nodes)
-    .force("link", d3.forceLink(links).id(d => d.id).distance(120))
-    .force("charge", d3.forceManyBody().strength(-300))
-    .force("center", d3.forceCenter(width / 2, height / 2));
-
-const link = svg.append("g")
-    .selectAll("line")
-    .data(links)
-    .enter().append("line")
-    .attr("stroke", "#aaa")
-    .attr("stroke-width", 2);
-
-const node = svg.append("g")
-    .selectAll("g")
-    .data(nodes)
-    .enter().append("g")
-    .call(d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended));
-
-node.append("circle")
-    .attr("r", d => d.freq ? Math.max(10, Math.min(40, d.freq * 0.5)) : 30)
-    .attr("fill", d => {{
-        if (d.group === "positive") return "#ADD8E6";  // 연한 하늘색
-        if (d.group === "negative") return "#FA8072";
-        return "#FFD700";
-    }})
-    .attr("stroke", "#333")
-    .attr("stroke-width", 2)
-    .attr("stroke-dasharray", "4,2")
-    .on("mouseover", function (event, d) {{
-        d3.select(this)
-            .transition().duration(150)
-            .attr("stroke-dasharray", "0")
-            .attr("fill", () => {{
-                if (d.group === "positive") return "#87CEEB";  // 진한 하늘색
-                if (d.group === "negative") return "#E75454";  // 진한 살구
-                return "#FFC700";
-            }});
-    }})
-    .on("mouseout", function (event, d) {{
-        d3.select(this)
-            .transition().duration(150)
-            .attr("stroke-dasharray", "4,2")
-            .attr("fill", () => {{
-                if (d.group === "positive") return "#ADD8E6";
-                if (d.group === "negative") return "#FA8072";
-                return "#FFD700";
-            }});
-    }});
-
-node.append("title")
-    .text(d => {{
-        if (d.group === "brand") return "브랜드";
-        return `감정: ${{d.group}}, 언급횟수: ${{d.freq}}`;
-    }});
-
-node.append("text")
-    .attr("dy", "0.35em")
-    .attr("text-anchor", "middle")
-    .text(d => d.id.replace("_positive", "").replace("_negative", ""));
-
-node.on("click", (event, d) => {{
-    const panel = document.getElementById("sentences");
-    const data = sentenceData[d.id];
-    if (!data || data.length === 0) {{
-        panel.innerHTML = "<i>관련 문장이 없습니다.</i>";
-        return;
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    body {{ display: flex; font-family: Arial, sans-serif; }}
+    svg {{ width: 75%; height: 600px; border: 1px solid #ccc; }}
+    #sentence-panel {{
+        width: 25%; padding: 10px; background: #f9f9f9;
+        border-left: 1px solid #ddd; overflow-y: auto; height: 600px;
     }}
-    panel.innerHTML = data.map(s => `
-        <a class="text-link" href="${{s['원본링크']}}" target="_blank">
-            ${s['문장']}
-        </a>
-    `).join("");
-}});
+    h3 {{ margin-top: 0; }}
+    .text-link {{ margin-bottom: 8px; display: block; font-size: 14px; }}
+    </style>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    </head>
+    <body>
+    <svg></svg>
+    <div id="sentence-panel">
+        <h3>📝 관련 문장</h3>
+        <div id="sentences">노드를 클릭해보세요.</div>
+    </div>
+    <script>
+    const nodes = {nodes_json};
+    const links = {links_json};
+    const sentenceData = {sentences_json};
 
-simulation.on("tick", () => {{
-    link.attr("x1", d => d.source.x)
-        .attr("y1", d => d.source.y)
-        .attr("x2", d => d.target.x)
-        .attr("y2", d => d.target.y);
-    node.attr("transform", d => `translate(${{d.x}},${{d.y}})`);
-}});
+    const linkCount = {{}};
+    links.forEach(l => {{
+        linkCount[l.target] = (linkCount[l.target] || 0) + 1;
+    }});
 
-function dragstarted(event, d) {{
-    if (!event.active) simulation.alphaTarget(0.3).restart();
-    d.fx = d.x;
-    d.fy = d.y;
-}}
+    const width = document.querySelector("svg").clientWidth;
+    const height = document.querySelector("svg").clientHeight;
+    const svg = d3.select("svg");
 
-function dragged(event, d) {{
-    d.fx = event.x;
-    d.fy = event.y;
-}}
+    const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(120))
+        .force("charge", d3.forceManyBody().strength(-300))
+        .force("center", d3.forceCenter(width / 2, height / 2));
 
-function dragended(event, d) {{
-    if (!event.active) simulation.alphaTarget(0);
-    d.fx = null;
-    d.fy = null;
-}}
-</script>
-</body>
-</html>
-"""
+    const link = svg.append("g")
+        .selectAll("line")
+        .data(links)
+        .enter().append("line")
+        .attr("stroke", "#aaa")
+        .attr("stroke-width", 2);
 
-st.components.v1.html(html_code, height=650)
+    const node = svg.append("g")
+        .selectAll("g")
+        .data(nodes)
+        .enter().append("g")
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+
+    node.append("circle")
+        .attr("r", d => d.freq ? Math.max(10, Math.min(40, d.freq * 0.5)) : 30)
+        .attr("fill", d => {{
+            if (d.group === "positive") return "#ADD8E6";
+            if (d.group === "negative") return "#FA8072";
+            return "#FFD700";
+        }})
+        .attr("stroke", "#333")
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", "4,2")
+        .on("mouseover", function (event, d) {{
+            d3.select(this)
+                .transition().duration(150)
+                .attr("stroke-dasharray", "0")
+                .attr("fill", () => {{
+                    if (d.group === "positive") return "#87CEEB";
+                    if (d.group === "negative") return "#E75454";
+                    return "#FFC700";
+                }});
+        }})
+        .on("mouseout", function (event, d) {{
+            d3.select(this)
+                .transition().duration(150)
+                .attr("stroke-dasharray", "4,2")
+                .attr("fill", () => {{
+                    if (d.group === "positive") return "#ADD8E6";
+                    if (d.group === "negative") return "#FA8072";
+                    return "#FFD700";
+                }});
+        }});
+
+    node.append("title")
+        .text(d => {{
+            if (d.group === "brand") return "브랜드";
+            return `감정: ${{d.group}}, 언급횟수: ${{d.freq}}`;
+        }});
+
+    node.append("text")
+        .attr("dy", "0.35em")
+        .attr("text-anchor", "middle")
+        .text(d => d.id.replace("_positive", "").replace("_negative", ""));
+
+    node.on("click", (event, d) => {{
+        const panel = document.getElementById("sentences");
+        const data = sentenceData[d.id];
+        if (!data || data.length === 0) {{
+            panel.innerHTML = "<i>관련 문장이 없습니다.</i>";
+            return;
+        }}
+        panel.innerHTML = data.map(s => `
+            <a class="text-link" href="${{s['원본링크']}}" target="_blank">
+                ${{s['문장']}}
+            </a>
+        `).join("");
+    }});
+
+    simulation.on("tick", () => {{
+        link.attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+        node.attr("transform", d => `translate(${{d.x}},${{d.y}})`);
+    }});
+
+    function dragstarted(event, d) {{
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }}
+
+    function dragged(event, d) {{
+        d.fx = event.x;
+        d.fy = event.y;
+    }}
+
+    function dragended(event, d) {{
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }}
+    </script>
+    </body>
+    </html>
+    """
+
+    st.components.v1.html(html_code, height=650)
