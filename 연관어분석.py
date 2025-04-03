@@ -113,7 +113,6 @@ def show_relation_tab():
         .force("link", d3.forceLink(links).id(d => d.id).distance(50))
         .force("charge", d3.forceManyBody().strength(-100))
         .force("center", d3.forceCenter(width / 2, height / 2));
-        .alphaDecay(0.05);  // ⬅ 빨리 멈추도록
         
     const linkCount = {{}};
     links.forEach(l => {{
