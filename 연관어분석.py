@@ -53,7 +53,7 @@ nodes_json = json.dumps(nodes)
 links_json = json.dumps(links)
 
 # ✅ HTML 코드 작성 (템플릿 리터럴 문제 없음)
-html_code = f"""
+html_code = """
 <!DOCTYPE html>
 <html lang="ko">
 <head>
