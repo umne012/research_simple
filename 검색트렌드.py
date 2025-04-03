@@ -65,8 +65,6 @@ def show_trend_tab(st):
 
     search_groups = st.session_state.search_groups
     
-    st.title("검색트렌드 분석")
-
     # ✅ 검색어/제외어 설정
     with st.expander("📋 그룹별 검색어/제외어 설정", expanded=False):
         group_inputs = {}
