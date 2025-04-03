@@ -5,15 +5,15 @@ import plotly.graph_objects as go
 from streamlit_tags import st_tags
 
 def show_trend_tab(st):
-    st.title("검색트렌드 분석")
     st.set_page_config(layout="wide")
+
     # ✅ 전체 스타일 적용
     st.markdown("""
         <style>
         * {
             font-family: 'Pretendard', sans-serif;
         }
-    
+
         /* 🔍 분석 버튼 (붉은 강조) - 첫 번째 st.button */
         div.stButton:nth-of-type(1) > button {
             background-color: transparent;
@@ -31,7 +31,7 @@ def show_trend_tab(st):
             color: white;
             border: 1px solid #FA8072;
         }
-    
+
         /* 📄 PDF 저장 버튼 (hover 초록 강조) */
         button.pdf-btn {
             background-color: transparent;
@@ -52,17 +52,19 @@ def show_trend_tab(st):
         </style>
     """, unsafe_allow_html=True)
 
-    # ✅ 초기 그룹
+    st.title("검색트렌드 분석")
+
+    # 나머지 코드는 그대로 유지
+    # ✅ 초기 그룹 상태 유지
     original_search_groups = [
         {"groupName": "Skylife", "keywords": ["스카이라이프", "skylife"], "exclude": []},
         {"groupName": "KT", "keywords": ["KT", "케이티", "기가지니", "지니티비"], "exclude": ["SKT", "M 모바일"]},
         {"groupName": "SKB", "keywords": ["skb", "브로드밴드", "btv", "비티비", "b티비"], "exclude": []},
         {"groupName": "LGU", "keywords": ["LGU+", "유플러스", "유플"], "exclude": []},
     ]
-    
     if "search_groups" not in st.session_state:
         st.session_state.search_groups = original_search_groups.copy()
-    
+
     search_groups = st.session_state.search_groups
     
     st.title("검색트렌드 분석")
