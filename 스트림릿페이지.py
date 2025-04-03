@@ -288,7 +288,7 @@ elif selected_tab == "연관어 분석":
         parts = ["part1", "part2", "part3"]
         morph_frames = []
         for part in parts:
-            url = f"https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_merged_{part}.csv"
+            url = f"https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_{part}.csv"
             response = requests.get(url)
             response.raise_for_status()
             morph_frames.append(pd.read_csv(StringIO(response.text)))
