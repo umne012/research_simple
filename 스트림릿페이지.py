@@ -55,16 +55,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ✅ 사이드 메뉴
-with st.sidebar:
-    selected_tab = option_menu(
-        menu_title="research",
-        options=["검색트렌드", "연관어 분석", "긍부정 분석"],
-        icons=["bar-chart", "graph-up", "emoji-smile"],
-        menu_icon="cast",
-        default_index=0,
-    )
-
 # ✅ 초기 그룹
 original_search_groups = [
     {"groupName": "Skylife", "keywords": ["스카이라이프", "skylife"], "exclude": []},
@@ -73,10 +63,29 @@ original_search_groups = [
     {"groupName": "LGU", "keywords": ["LGU+", "유플러스", "유플"], "exclude": []},
 ]
 
+# ✅ 세션 상태 초기화
 if "search_groups" not in st.session_state:
     st.session_state.search_groups = original_search_groups.copy()
-search_groups = st.session_state.search_groups
+if "selected_tab" not in st.session_state:
+    st.session_state.selected_tab = "검색트렌드"
 
+# ✅ 사이드 메뉴 (렌더링만 수행)
+with st.sidebar:
+    selected_tab = option_menu(
+        menu_title="research",
+        options=["검색트렌드", "연관어 분석", "긍부정 분석"],
+        icons=["bar-chart", "graph-up", "emoji-smile"],
+        menu_icon="cast",
+        default_index=["검색트렌드", "연관어 분석", "긍부정 분석"].index(st.session_state.selected_tab),
+    )
+    # 업데이트된 탭 저장
+    st.session_state.selected_tab = selected_tab
+
+# ✅ 세션 상태 사용
+search_groups = st.session_state.search_groups
+selected_tab = st.session_state.selected_tab
+
+# ✅ 탭별 기능 호출
 if selected_tab == "검색트렌드":
     from 검색트렌드 import show_trend_tab
     show_trend_tab(st, st_tags, date, timedelta, requests, go, search_groups)
