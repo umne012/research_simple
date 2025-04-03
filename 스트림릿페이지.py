@@ -220,35 +220,35 @@ import requests
 from io import BytesIO
 import streamlit as st
 
-        @st.cache_data
-        def load_word_and_sentence_data():
-            word_data = {}
-        
-            # GitHub raw 링크로부터 엑셀 파일 다운로드
-            word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_recovered.xlsx"
-            morph_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_recovered.xlsx"
-        
-            word_response = requests.get(word_url)
-            morph_response = requests.get(morph_url)
-        
-            # 응답이 정상인지 체크
-            word_response.raise_for_status()
-            morph_response.raise_for_status()
-        
-            # BytesIO로 읽고 openpyxl 엔진으로 처리
-            word_xls = pd.ExcelFile(BytesIO(word_response.content), engine="openpyxl")
-            for sheet in word_xls.sheet_names:
-                df = pd.read_excel(word_xls, sheet_name=sheet, engine="openpyxl")
-                word_data[sheet] = df
-        
-            morph_df = pd.read_excel(BytesIO(morph_response.content), sheet_name=None, engine="openpyxl")
-            all_sentences = pd.concat(morph_df.values(), ignore_index=True)
-        
-            return word_data, all_sentences
-        
-        
-        # 호출
-        word_data, sentence_df = load_word_and_sentence_data()
+@st.cache_data
+def load_word_and_sentence_data():
+    word_data = {}
+
+    # GitHub raw 링크로부터 엑셀 파일 다운로드
+    word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_recovered.xlsx"
+    morph_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_recovered.xlsx"
+
+    word_response = requests.get(word_url)
+    morph_response = requests.get(morph_url)
+
+    # 응답이 정상인지 체크
+    word_response.raise_for_status()
+    morph_response.raise_for_status()
+
+    # BytesIO로 읽고 openpyxl 엔진으로 처리
+    word_xls = pd.ExcelFile(BytesIO(word_response.content), engine="openpyxl")
+    for sheet in word_xls.sheet_names:
+        df = pd.read_excel(word_xls, sheet_name=sheet, engine="openpyxl")
+        word_data[sheet] = df
+
+    morph_df = pd.read_excel(BytesIO(morph_response.content), sheet_name=None, engine="openpyxl")
+    all_sentences = pd.concat(morph_df.values(), ignore_index=True)
+
+    return word_data, all_sentences
+
+
+# 호출
+word_data, sentence_df = load_word_and_sentence_data()
 
 
 
