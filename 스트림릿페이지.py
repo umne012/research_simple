@@ -297,7 +297,9 @@ elif selected_tab == "연관어 분석":
         sentence_df = pd.concat(morph_frames, ignore_index=True)
     
         return word_data, sentence_df
-
+    # ✅ 데이터 로드
+    word_data, sentence_df = load_word_and_sentence_data()
+    
     from pyvis.network import Network
     import streamlit.components.v1 as components
     import json
