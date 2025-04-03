@@ -99,16 +99,65 @@ def show_trend_tab():
         run_analysis = st.button("🔍 분석 시작", key="run_button")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # ✅ PDF 저장 버튼
+    # ✅ Excel 저장 버튼 (스타일 유지 + 기능 연결)
+    import io
+    import pandas as pd
+    import base64
+
     with col4:
-        st.markdown("""
-            <div style='padding-top: 28px;'>
-                <button onclick="window.print()" class="pdf-btn">
-                    📄 PDF 저장
-                </button>
-            </div>
-        """, unsafe_allow_html=True)
-        download_excel = st.button("📄 Excel 저장", key="excel_button")
+        if "trend_data" in st.session_state and "mention_data" in st.session_state and "group_mentions" in st.session_state:
+            trend_data = st.session_state["trend_data"]
+            mention_data = st.session_state["mention_data"]
+            group_mentions = st.session_state["group_mentions"]
+
+            # 1. 검색량 데이터
+            trend_df = pd.DataFrame()
+            for group in trend_data.get("results", []):
+                df = pd.DataFrame(group["data"])
+                df["group"] = group["title"]
+                trend_df = pd.concat([trend_df, df])
+            trend_df = trend_df.rename(columns={"period": "날짜", "ratio": "검색비율"})
+
+            # 2. 언급량 데이터
+            mention_df = pd.DataFrame(mention_data["labels"], columns=["날짜"])
+            for dataset in mention_data["datasets"]:
+                mention_df[dataset["label"]] = dataset["data"]
+
+            # 3. 뉴스·블로그 문장 리스트
+            mention_list = []
+            for group, articles in group_mentions.items():
+                for item in articles:
+                    mention_list.append({
+                        "그룹명": group,
+                        "제목": item["title"],
+                        "링크": item["link"]
+                    })
+            mention_detail_df = pd.DataFrame(mention_list)
+
+            # 4. 엑셀 파일로 저장
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                trend_df.to_excel(writer, index=False, sheet_name="검색량 데이터")
+                mention_df.to_excel(writer, index=False, sheet_name="언급량 데이터")
+                mention_detail_df.to_excel(writer, index=False, sheet_name="뉴스_블로그_문장")
+            output.seek(0)
+            b64 = base64.b64encode(output.read()).decode()
+            href = f"""
+                <div style='padding-top: 28px;'>
+                    <a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}"
+                       download="검색트렌드_분석결과.xlsx">
+                        <button class="pdf-btn">📄 Excel 저장</button>
+                    </a>
+                </div>
+            """
+            st.markdown(href, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+                <div style='padding-top: 28px;'>
+                    <button class="pdf-btn" disabled>📄 Excel 저장</button>
+                </div>
+            """, unsafe_allow_html=True)
+
 
 
     # ✅ run_analysis 클릭 시 분석 수행
