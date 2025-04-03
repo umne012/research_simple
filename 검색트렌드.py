@@ -6,23 +6,71 @@ from streamlit_tags import st_tags
 
 def show_trend_tab(st):
     st.title("검색트렌드 분석")
+    st.set_page_config(layout="wide")
+    # ✅ 전체 스타일 적용
+    st.markdown("""
+        <style>
+        * {
+            font-family: 'Pretendard', sans-serif;
+        }
+    
+        /* 🔍 분석 버튼 (붉은 강조) - 첫 번째 st.button */
+        div.stButton:nth-of-type(1) > button {
+            background-color: transparent;
+            color: #FA8072;
+            padding: 7px 24px;
+            border: 1px dashed #FA8072;
+            border-radius: 6px;
+            font-size: 16px;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        div.stButton:nth-of-type(1) > button:hover {
+            background-color: #FA8072;
+            color: white;
+            border: 1px solid #FA8072;
+        }
+    
+        /* 📄 PDF 저장 버튼 (hover 초록 강조) */
+        button.pdf-btn {
+            background-color: transparent;
+            color: #4CAF50;
+            padding: 7px 24px;
+            border: 1px dashed #4CAF50;
+            border-radius: 6px;
+            font-size: 16px;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button.pdf-btn:hover {
+            background-color: #4CAF50;
+            color: white;
+            border: 1px solid #4CAF50;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
-    # ✅ 초기 그룹 상태 유지
+    # ✅ 초기 그룹
     original_search_groups = [
         {"groupName": "Skylife", "keywords": ["스카이라이프", "skylife"], "exclude": []},
         {"groupName": "KT", "keywords": ["KT", "케이티", "기가지니", "지니티비"], "exclude": ["SKT", "M 모바일"]},
         {"groupName": "SKB", "keywords": ["skb", "브로드밴드", "btv", "비티비", "b티비"], "exclude": []},
         {"groupName": "LGU", "keywords": ["LGU+", "유플러스", "유플"], "exclude": []},
     ]
+    
     if "search_groups" not in st.session_state:
         st.session_state.search_groups = original_search_groups.copy()
-
+    
     search_groups = st.session_state.search_groups
+    
+    st.title("검색트렌드 분석")
 
     # ✅ 검색어/제외어 설정
     with st.expander("📋 그룹별 검색어/제외어 설정", expanded=False):
         group_inputs = {}
-        for group in search_groups:
+        for group in original_search_groups:
             st.markdown(f"<h5 style='color: #333;'>{group['groupName']}</h5>", unsafe_allow_html=True)
             kw_tags = st_tags(label="검색어", text="엔터로 여러 개 등록", value=group["keywords"], key=f"kw_{group['groupName']}")
             ex_tags = st_tags(label="제외어", text="엔터로 여러 개 등록", value=group["exclude"], key=f"ex_{group['groupName']}")
@@ -46,11 +94,13 @@ def show_trend_tab(st):
     with col2:
         end_date = st.date_input("종료일", value=default_end)
 
+    # ✅ 분석 시작 버튼 → rerun 없이 바로 실행
     with col3:
         st.markdown("<div style='padding-top: 28px;'>", unsafe_allow_html=True)
         run_analysis = st.button("🔍 분석 시작", key="run_button")
         st.markdown("</div>", unsafe_allow_html=True)
 
+    # ✅ PDF 저장 버튼
     with col4:
         st.markdown("""
             <div style='padding-top: 28px;'>
@@ -60,7 +110,9 @@ def show_trend_tab(st):
             </div>
         """, unsafe_allow_html=True)
 
-    # ✅ 분석 수행
+
+
+    # ✅ run_analysis 클릭 시 분석 수행
     if run_analysis:
         def get_date_range(start, end):
             return [(start + timedelta(days=i)).isoformat() for i in range((end - start).days + 1)]
@@ -129,7 +181,7 @@ def show_trend_tab(st):
         st.session_state.mention_data = mention_data
         st.session_state.group_mentions = group_mentions
 
-    # ✅ 시각화 표시
+    # ✅ 시각화
     trend_data = st.session_state.get("trend_data", {})
     mention_data = st.session_state.get("mention_data", {})
     group_mentions = st.session_state.get("group_mentions", {})
@@ -145,7 +197,13 @@ def show_trend_tab(st):
             margin=dict(l=40, r=40, t=60, b=100),
             xaxis=dict(title="날짜", showgrid=True),
             yaxis=dict(title="값", showgrid=True),
-            legend=dict(orientation="h", x=0.5, y=-0.2, xanchor="center", yanchor="top")
+            legend=dict(
+                orientation="h",
+                x=0.5,
+                y=-0.2,
+                xanchor="center",
+                yanchor="top"
+            )
         )
 
         with gcol1:
