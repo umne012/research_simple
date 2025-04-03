@@ -269,28 +269,33 @@ elif selected_tab == "연관어 분석":
 
     @st.cache_data
     def load_word_and_sentence_data():
-        word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count.xlsx"
-        morph_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis.xlsx"
-
+        # ✅ GitHub에서 CSV로 불러오기
+        word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_recovered.xlsx"
+        morph_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_merged.csv"
+    
+        # 단어 시트 여러 개 불러오기 (엑셀)
         word_response = requests.get(word_url)
-        morph_response = requests.get(morph_url)
-
         word_response.raise_for_status()
-        morph_response.raise_for_status()
-
         word_xls = pd.ExcelFile(BytesIO(word_response.content), engine="openpyxl")
-        word_data = {
-            sheet: pd.read_excel(word_xls, sheet_name=sheet, engine="openpyxl")
-            for sheet in word_xls.sheet_names
-        }
-
-        morph_df = pd.read_excel(BytesIO(morph_response.content), sheet_name=None, engine="openpyxl")
-        all_sentences = pd.concat(morph_df.values(), ignore_index=True)
-
-        return word_data, all_sentences
-
+    
+        word_data = {}
+        for sheet in word_xls.sheet_names:
+            df = pd.read_excel(word_xls, sheet_name=sheet, engine="openpyxl")
+            word_data[sheet] = df
+    
+        # 병합된 CSV 읽기
+        morph_df = pd.read_csv(morph_url)
+        return word_data, morph_df
+    
+    # ✅ 데이터 로드
     word_data, sentence_df = load_word_and_sentence_data()
+
+     from pyvis.network import Network
+    import streamlit.components.v1 as components
+    import json
+
     left_col, right_col = st.columns([2, 1])
+
     with left_col:
         net = Network(height="700px", width="100%", notebook=False, directed=False, bgcolor="#ffffff")
         added_word_nodes = {}
@@ -323,6 +328,7 @@ elif selected_tab == "연관어 분석":
                         title=f"언급 횟수: {freq}"
                     )
                     added_word_nodes[node_id] = word
+
                     matched = sentence_df[(sentence_df["단어"] == word) & (sentence_df["감정"] == sentiment)]
                     sentences = matched[["문장ID", "단어", "원본링크"]].drop_duplicates().to_dict("records")
                     sentence_map[node_id] = sentences
@@ -338,6 +344,7 @@ elif selected_tab == "연관어 분석":
         st.markdown("노드를 클릭하면 해당 단어가 포함된 문장이 여기에 표시됩니다.")
         st.markdown("<div id='sentence-list'></div>", unsafe_allow_html=True)
 
+        # sentence_map을 JSON 문자열로 전달하고, 클릭된 nodeId로 문장 정보 동적 표시
         st.components.v1.html(f"""
         <script>
         const sentenceData = {json.dumps(sentence_map)};
