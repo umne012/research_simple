@@ -34,7 +34,7 @@ def show_relation_tab():
     
     def highlight_and_shorten(text, keyword):
         if keyword not in text:
-            return text
+            return text[:50] + "..." if len(text) > 50 else text
         idx = text.index(keyword)
         start = max(0, idx - 15)
         end = min(len(text), idx + len(keyword) + 15)
@@ -42,8 +42,9 @@ def show_relation_tab():
         if start > 0:
             snippet = "..." + snippet
         if end < len(text):
-            snippet = snippet + "..."
+            snippet += "..."
         return snippet.replace(keyword, f"<b style='background:yellow'>{keyword}</b>")
+
     
     for brand, df in word_data.items():
         nodes.append({"id": brand, "group": "brand"})
@@ -176,6 +177,7 @@ def show_relation_tab():
     node.append("text")
         .attr("dy", "0.35em")
         .attr("text-anchor", "middle")
+        .attr("font-size", "11px")
         .text(d => d.id.replace("_positive", "").replace("_negative", ""));
     
     node.on("click", (event, d) => {{
