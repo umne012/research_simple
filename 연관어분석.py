@@ -13,13 +13,8 @@ def show_relation_tab():
         word_df = pd.read_csv(StringIO(requests.get(word_url).text))
         word_data = {brand: df for brand, df in word_df.groupby("그룹")}
 
-        parts = ["part1", "part2", "part3"]
-        sentence_frames = []
-        for part in parts:
-            url = f"https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_{part}.csv"
-            df = pd.read_csv(StringIO(requests.get(url).text))
-            sentence_frames.append(df)
-        sentence_df = pd.concat(sentence_frames, ignore_index=True)
+        merged_url = "https://raw.githubusercontent.com/umne012/research_simple/main/sentimental_merged.csv"
+        sentence_df = pd.read_csv(merged_url)
         return word_data, sentence_df
 
     word_data, sentence_df = load_data()
