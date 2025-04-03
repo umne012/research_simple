@@ -4,10 +4,8 @@ import requests
 from io import StringIO
 import json
 
-
 st.title("📌 연관어 분석")
 
-# 형태소 분석 문장 불러오기
 @st.cache_data
 def load_data():
     word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_merged.csv"
@@ -45,7 +43,7 @@ for brand, df in word_data.items():
             nodes.append({"id": node_id, "group": sentiment, "freq": freq})
             added_words.add(node_id)
             match = sentence_df[(sentence_df["단어"] == word) & (sentence_df["감정"] == sentiment)]
-            sentence_map[node_id] = match[["문장ID", "단어", "원본링크"]].drop_duplicates().to_dict("records")
+            sentence_map[node_id] = match[["문장", "원본링크"]].drop_duplicates().to_dict("records")
         links.append({"source": brand, "target": node_id})
         link_counter[node_id] = link_counter.get(node_id, 0) + 1
 
@@ -53,7 +51,7 @@ nodes_json = json.dumps(nodes)
 links_json = json.dumps(links)
 sentences_json = json.dumps(sentence_map, ensure_ascii=False)
 
-# ✅ 전체 HTML 코드
+# HTML 코드
 html_code = f"""
 <!DOCTYPE html>
 <html lang="ko">
@@ -102,8 +100,7 @@ const link = svg.append("g")
     .data(links)
     .enter().append("line")
     .attr("stroke", "#aaa")
-    .attr("stroke-width", 2)
-    .attr("stroke-dasharray", d => linkCount[d.target] > 1 ? "0" : "4,4");
+    .attr("stroke-width", 2);
 
 const node = svg.append("g")
     .selectAll("g")
@@ -117,9 +114,32 @@ const node = svg.append("g")
 node.append("circle")
     .attr("r", d => d.freq ? Math.max(10, Math.min(40, d.freq * 0.5)) : 30)
     .attr("fill", d => {{
-        if (d.group === "positive") return "#D8BFD8";  // 연보라
+        if (d.group === "positive") return "#ADD8E6";  // 연한 하늘색
         if (d.group === "negative") return "#FA8072";
         return "#FFD700";
+    }})
+    .attr("stroke", "#333")
+    .attr("stroke-width", 2)
+    .attr("stroke-dasharray", "4,2")
+    .on("mouseover", function (event, d) {{
+        d3.select(this)
+            .transition().duration(150)
+            .attr("stroke-dasharray", "0")
+            .attr("fill", () => {{
+                if (d.group === "positive") return "#87CEEB";  // 진한 하늘색
+                if (d.group === "negative") return "#E75454";  // 진한 살구
+                return "#FFC700";
+            }});
+    }})
+    .on("mouseout", function (event, d) {{
+        d3.select(this)
+            .transition().duration(150)
+            .attr("stroke-dasharray", "4,2")
+            .attr("fill", () => {{
+                if (d.group === "positive") return "#ADD8E6";
+                if (d.group === "negative") return "#FA8072";
+                return "#FFD700";
+            }});
     }});
 
 node.append("title")
@@ -142,7 +162,7 @@ node.on("click", (event, d) => {{
     }}
     panel.innerHTML = data.map(s => `
         <a class="text-link" href="${{s['원본링크']}}" target="_blank">
-            🔗 문장ID: ${{s['문장ID']}} (단어: ${{s['단어']}})
+            ${s['문장']}
         </a>
     `).join("");
 }});
