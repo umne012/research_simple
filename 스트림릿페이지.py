@@ -219,106 +219,106 @@ import pandas as pd
 import requests
 from io import BytesIO
 import streamlit as st
-
-
-elif selected_tab == "연관어 분석":
-    st.title("📌 연관어 네트워크 분석")
-
-    @st.cache_data
-    def load_word_and_sentence_data():
-        word_data = {}
-
-        # GitHub raw 링크로부터 엑셀 파일 다운로드
-        word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_recovered.xlsx"
-        morph_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_recovered.xlsx"
-
-        word_response = requests.get(word_url)
-        morph_response = requests.get(morph_url)
-
-        word_response.raise_for_status()
-        morph_response.raise_for_status()
-
-        word_xls = pd.ExcelFile(BytesIO(word_response.content), engine="openpyxl")
-        for sheet in word_xls.sheet_names:
-            df = pd.read_excel(word_xls, sheet_name=sheet, engine="openpyxl")
-            word_data[sheet] = df
-
-        morph_df = pd.read_excel(BytesIO(morph_response.content), sheet_name=None, engine="openpyxl")
-        all_sentences = pd.concat(morph_df.values(), ignore_index=True)
-
-        return word_data, all_sentences
-
-    word_data, sentence_df = load_word_and_sentence_data()
-
-    from pyvis.network import Network
-    import streamlit.components.v1 as components
-
-    left_col, right_col = st.columns([2, 1])
-
-    with left_col:
-        net = Network(height="700px", width="100%", notebook=False, directed=False, bgcolor="#ffffff")
-        added_word_nodes = {}
-        sentence_map = {}
-
-        for brand, df in word_data.items():
-            net.add_node(brand, label=brand, size=30, color="skyblue", shape="box", font={"size": 16})
-            word_entries = []
-            for _, row in df.iterrows():
-                word = row["단어"]
-                if row.get("positive", 0) > 0:
-                    word_entries.append((f"{word}_positive", row["positive"], "positive", word))
-                if row.get("negative", 0) > 0:
-                    word_entries.append((f"{word}_negative", row["negative"], "negative", word))
-
-            top_entries = sorted(word_entries, key=lambda x: x[1], reverse=True)[:10]
-
-            for node_id, freq, sentiment, word in top_entries:
-                node_size = max(20, min(50, freq * 0.5))
-                color = "lightcoral" if sentiment == "positive" else "lightblue"
-
-                if node_id not in added_word_nodes:
-                    net.add_node(
-                        node_id,
-                        label=f"{word}\n({sentiment})",
-                        size=node_size,
-                        color=color,
-                        shape="circle",
-                        font={"size": 14, "color": "white"},
-                        title=f"언급 횟수: {freq}"
-                    )
-                    added_word_nodes[node_id] = word
-
-                    matched = sentence_df[(sentence_df["단어"] == word) & (sentence_df["감정"] == sentiment)]
-                    sentences = matched[["문장ID", "단어", "원본링크"]].drop_duplicates().to_dict("records")
-                    sentence_map[node_id] = sentences
-
-                net.add_edge(brand, node_id, weight=freq)
-
-        net.force_atlas_2based(gravity=-50, central_gravity=0.02, spring_length=20, spring_strength=0.8)
-        net.save_graph("network_graph.html")
-        components.iframe("network_graph.html", height=750, scrolling=True)
-
-    with right_col:
-        st.subheader("📝 단어 관련 문장 보기")
-        st.markdown("노드를 클릭하면 해당 단어가 포함된 문장이 여기에 표시됩니다.")
-        st.markdown("<div id='sentence-list'></div>", unsafe_allow_html=True)
-
-        st.components.v1.html(f"""
-        <script>
-        const sentenceData = {json.dumps(sentence_map)};
-        window.addEventListener('message', (e) => {{
-            const nodeId = e.data;
-            const container = window.parent.document.querySelector('#sentence-list');
-            if (!container) return;
-            if (sentenceData[nodeId]) {{
-                let html = '';
-                sentenceData[nodeId].forEach((s, i) => {{
-                    html += `<div style='margin-bottom:8px;'>
-                        <a href='${{s["원본링크"]}}' target='_blank'>🔗 문장ID: ${{s["문장ID"]}} (${{s["단어"]}})</a>
-                    </div>`;
-                }});
-                container.innerHTML = html;
-            }}
-        }});
-        </script>
-        """, height=0)
+    
+    
+    elif selected_tab == "연관어 분석":
+        st.title("📌 연관어 네트워크 분석")
+    
+        @st.cache_data
+        def load_word_and_sentence_data():
+            word_data = {}
+    
+            # GitHub raw 링크로부터 엑셀 파일 다운로드
+            word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_recovered.xlsx"
+            morph_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_recovered.xlsx"
+    
+            word_response = requests.get(word_url)
+            morph_response = requests.get(morph_url)
+    
+            word_response.raise_for_status()
+            morph_response.raise_for_status()
+    
+            word_xls = pd.ExcelFile(BytesIO(word_response.content), engine="openpyxl")
+            for sheet in word_xls.sheet_names:
+                df = pd.read_excel(word_xls, sheet_name=sheet, engine="openpyxl")
+                word_data[sheet] = df
+    
+            morph_df = pd.read_excel(BytesIO(morph_response.content), sheet_name=None, engine="openpyxl")
+            all_sentences = pd.concat(morph_df.values(), ignore_index=True)
+    
+            return word_data, all_sentences
+    
+        word_data, sentence_df = load_word_and_sentence_data()
+    
+        from pyvis.network import Network
+        import streamlit.components.v1 as components
+    
+        left_col, right_col = st.columns([2, 1])
+    
+        with left_col:
+            net = Network(height="700px", width="100%", notebook=False, directed=False, bgcolor="#ffffff")
+            added_word_nodes = {}
+            sentence_map = {}
+    
+            for brand, df in word_data.items():
+                net.add_node(brand, label=brand, size=30, color="skyblue", shape="box", font={"size": 16})
+                word_entries = []
+                for _, row in df.iterrows():
+                    word = row["단어"]
+                    if row.get("positive", 0) > 0:
+                        word_entries.append((f"{word}_positive", row["positive"], "positive", word))
+                    if row.get("negative", 0) > 0:
+                        word_entries.append((f"{word}_negative", row["negative"], "negative", word))
+    
+                top_entries = sorted(word_entries, key=lambda x: x[1], reverse=True)[:10]
+    
+                for node_id, freq, sentiment, word in top_entries:
+                    node_size = max(20, min(50, freq * 0.5))
+                    color = "lightcoral" if sentiment == "positive" else "lightblue"
+    
+                    if node_id not in added_word_nodes:
+                        net.add_node(
+                            node_id,
+                            label=f"{word}\n({sentiment})",
+                            size=node_size,
+                            color=color,
+                            shape="circle",
+                            font={"size": 14, "color": "white"},
+                            title=f"언급 횟수: {freq}"
+                        )
+                        added_word_nodes[node_id] = word
+    
+                        matched = sentence_df[(sentence_df["단어"] == word) & (sentence_df["감정"] == sentiment)]
+                        sentences = matched[["문장ID", "단어", "원본링크"]].drop_duplicates().to_dict("records")
+                        sentence_map[node_id] = sentences
+    
+                    net.add_edge(brand, node_id, weight=freq)
+    
+            net.force_atlas_2based(gravity=-50, central_gravity=0.02, spring_length=20, spring_strength=0.8)
+            net.save_graph("network_graph.html")
+            components.iframe("network_graph.html", height=750, scrolling=True)
+    
+        with right_col:
+            st.subheader("📝 단어 관련 문장 보기")
+            st.markdown("노드를 클릭하면 해당 단어가 포함된 문장이 여기에 표시됩니다.")
+            st.markdown("<div id='sentence-list'></div>", unsafe_allow_html=True)
+    
+            st.components.v1.html(f"""
+            <script>
+            const sentenceData = {json.dumps(sentence_map)};
+            window.addEventListener('message', (e) => {{
+                const nodeId = e.data;
+                const container = window.parent.document.querySelector('#sentence-list');
+                if (!container) return;
+                if (sentenceData[nodeId]) {{
+                    let html = '';
+                    sentenceData[nodeId].forEach((s, i) => {{
+                        html += `<div style='margin-bottom:8px;'>
+                            <a href='${{s["원본링크"]}}' target='_blank'>🔗 문장ID: ${{s["문장ID"]}} (${{s["단어"]}})</a>
+                        </div>`;
+                    }});
+                    container.innerHTML = html;
+                }}
+            }});
+            </script>
+            """, height=0)
