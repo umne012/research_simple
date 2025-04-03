@@ -14,43 +14,45 @@ st.set_page_config(layout="wide")
 
 # ✅ 전체 스타일 적용
 st.markdown("""
-<style>
-* {
-    font-family: 'Pretendard', sans-serif;
-}
-div.stButton:nth-of-type(1) > button {
-    background-color: transparent;
-    color: #FA8072;
-    padding: 7px 24px;
-    border: 1px dashed #FA8072;
-    border-radius: 6px;
-    font-size: 16px;
-    width: 100%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-div.stButton:nth-of-type(1) > button:hover {
-    background-color: #FA8072;
-    color: white;
-    border: 1px solid #FA8072;
-}
-button.pdf-btn {
-    background-color: transparent;
-    color: #4CAF50;
-    padding: 7px 24px;
-    border: 1px dashed #4CAF50;
-    border-radius: 6px;
-    font-size: 16px;
-    width: 100%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-button.pdf-btn:hover {
-    background-color: #4CAF50;
-    color: white;
-    border: 1px solid #4CAF50;
-}
-</style>
+    <style>
+    * {
+        font-family: 'Pretendard', sans-serif;
+    }
+
+    div.stButton:nth-of-type(1) > button {
+        background-color: transparent;
+        color: #FA8072;
+        padding: 7px 24px;
+        border: 1px dashed #FA8072;
+        border-radius: 6px;
+        font-size: 16px;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    div.stButton:nth-of-type(1) > button:hover {
+        background-color: #FA8072;
+        color: white;
+        border: 1px solid #FA8072;
+    }
+
+    button.pdf-btn {
+        background-color: transparent;
+        color: #4CAF50;
+        padding: 7px 24px;
+        border: 1px dashed #4CAF50;
+        border-radius: 6px;
+        font-size: 16px;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    button.pdf-btn:hover {
+        background-color: #4CAF50;
+        color: white;
+        border: 1px solid #4CAF50;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
 # ✅ 사이드 메뉴
@@ -95,27 +97,20 @@ if selected_tab == "검색트렌드":
             search_groups = st.session_state.search_groups
 
     today = date.today()
-    if "start_date" not in st.session_state:
-        st.session_state.start_date = today - timedelta(days=7)
-    if "end_date" not in st.session_state:
-        st.session_state.end_date = today
+    default_start = today - timedelta(days=7)
+    default_end = today
 
-    col1, col2, col3, col4 = st.columns([2.1, 2.1, 1, 1])
+    start_date = st.date_input("시작일", value=st.session_state.get("start_date", default_start))
+    end_date = st.date_input("종료일", value=st.session_state.get("end_date", default_end))
+
+    col1, col2 = st.columns([1, 1])
     with col1:
-        start_date = st.date_input("시작일", value=st.session_state.start_date)
-    with col2:
-        end_date = st.date_input("종료일", value=st.session_state.end_date)
-    with col3:
-        st.markdown("<div style='padding-top: 28px;'>", unsafe_allow_html=True)
         run_analysis = st.button("🔍 분석 시작", key="run_button")
-        st.markdown("</div>", unsafe_allow_html=True)
-    with col4:
+    with col2:
         st.markdown("""
-            <div style='padding-top: 28px;'>
-                <button onclick="window.print()" class="pdf-btn">
-                    📄 PDF 저장
-                </button>
-            </div>
+        <button onclick="window.print()" class="pdf-btn">
+            📄 PDF 저장
+        </button>
         """, unsafe_allow_html=True)
 
     if run_analysis:
@@ -127,7 +122,6 @@ if selected_tab == "검색트렌드":
 
         date_range = get_date_range(start_date, end_date)
 
-        trend_data = {}
         try:
             response = requests.post(
                 "https://openapi.naver.com/v1/datalab/search",
@@ -146,8 +140,7 @@ if selected_tab == "검색트렌드":
                 },
             )
             if response.ok:
-                trend_data = response.json()
-                st.session_state.trend_data = trend_data
+                st.session_state.trend_data = response.json()
             else:
                 st.error(f"검색 트렌드 오류: {response.status_code}")
         except Exception as e:
@@ -189,9 +182,9 @@ if selected_tab == "검색트렌드":
         st.session_state.mention_data = mention_data
         st.session_state.group_mentions = group_mentions
 
-    trend_data = st.session_state.get("trend_data", {})
-    mention_data = st.session_state.get("mention_data", {})
-    group_mentions = st.session_state.get("group_mentions", {})
+    trend_data = st.session_state.get("trend_data")
+    mention_data = st.session_state.get("mention_data")
+    group_mentions = st.session_state.get("group_mentions")
 
     if trend_data and mention_data:
         st.subheader("검색량 및 언급량 그래프")
@@ -204,13 +197,7 @@ if selected_tab == "검색트렌드":
             margin=dict(l=40, r=40, t=60, b=100),
             xaxis=dict(title="날짜", showgrid=True),
             yaxis=dict(title="값", showgrid=True),
-            legend=dict(
-                orientation="h",
-                x=0.5,
-                y=-0.2,
-                xanchor="center",
-                yanchor="top"
-            )
+            legend=dict(orientation="h", x=0.5, y=-0.2, xanchor="center", yanchor="top")
         )
 
         with gcol1:
@@ -251,4 +238,91 @@ if selected_tab == "검색트렌드":
                     </div>
                     ''', unsafe_allow_html=True)
 
-# ✅ 연관어 분석 탭 이하 생략 (계속 추가 가능)
+# ✅ 연관어 분석 탭
+elif selected_tab == "연관어 분석":
+    st.title("📌 연관어 네트워크 분석")
+
+    @st.cache_data
+    def load_word_and_sentence_data():
+        word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_merged.csv"
+        word_df = pd.read_csv(word_url)
+        word_data = {brand: df for brand, df in word_df.groupby("그룹")}
+
+        parts = ["part1", "part2", "part3"]
+        morph_frames = []
+        for part in parts:
+            url = f"https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_{part}.csv"
+            morph_frames.append(pd.read_csv(url))
+        sentence_df = pd.concat(morph_frames, ignore_index=True)
+        return word_data, sentence_df
+
+    word_data, sentence_df = load_word_and_sentence_data()
+
+    left_col, right_col = st.columns([2, 1])
+    with left_col:
+        net = Network(height="700px", width="100%", notebook=False, directed=False, bgcolor="#ffffff")
+        added_word_nodes = {}
+        sentence_map = {}
+
+        for brand, df in word_data.items():
+            net.add_node(brand, label=brand, size=30, color="skyblue", shape="box", font={"size": 16})
+            word_entries = []
+            for _, row in df.iterrows():
+                word = row["단어"]
+                if row.get("positive", 0) > 0:
+                    word_entries.append((f"{word}_positive", row["positive"], "positive", word))
+                if row.get("negative", 0) > 0:
+                    word_entries.append((f"{word}_negative", row["negative"], "negative", word))
+            top_entries = sorted(word_entries, key=lambda x: x[1], reverse=True)[:10]
+
+            for node_id, freq, sentiment, word in top_entries:
+                node_size = max(20, min(50, freq * 0.5))
+                color = "lightcoral" if sentiment == "positive" else "lightblue"
+                if node_id not in added_word_nodes:
+                    net.add_node(
+                        node_id,
+                        label=f"{word}\n({sentiment})",
+                        size=node_size,
+                        color=color,
+                        shape="circle",
+                        font={"size": 14, "color": "white"},
+                        title=f"언급 횟수: {freq}"
+                    )
+                    added_word_nodes[node_id] = word
+                    matched = sentence_df[(sentence_df["단어"] == word) & (sentence_df["감정"] == sentiment)]
+                    sentences = matched[["문장ID", "단어", "원본링크"]].drop_duplicates().to_dict("records")
+                    sentence_map[node_id] = sentences
+                net.add_edge(brand, node_id, weight=freq)
+
+        net.force_atlas_2based(gravity=-50, central_gravity=0.02, spring_length=20, spring_strength=0.8)
+        net.save_graph("network_graph.html")
+        components.iframe("network_graph.html", height=750, scrolling=True)
+
+    with right_col:
+        st.subheader("📝 단어 관련 문장 보기")
+        st.markdown("노드를 클릭하면 해당 단어가 포함된 문장이 여기에 표시됩니다.")
+        st.markdown("<div id='sentence-list'></div>", unsafe_allow_html=True)
+        st.components.v1.html(f"""
+        <script>
+        const sentenceData = {json.dumps(sentence_map)};
+        window.addEventListener('message', (e) => {{
+            const nodeId = e.data;
+            const container = window.parent.document.querySelector('#sentence-list');
+            if (!container) return;
+            if (sentenceData[nodeId]) {{
+                let html = '';
+                sentenceData[nodeId].forEach((s, i) => {{
+                    html += `<div style='margin-bottom:8px;'>
+                        <a href='${{s["원본링크"]}}' target='_blank'>🔗 문장ID: ${{s["문장ID"]}} (${{s["단어"]}})</a>
+                    </div>`;
+                }});
+                container.innerHTML = html;
+            }}
+        }});
+        </script>
+        """, height=0)
+
+# ✅ 긍부정 분석 탭
+elif selected_tab == "긍부정 분석":
+    st.title("🙂 긍·부정 분석 (개발 예정)")
+    st.info("이 탭은 준비 중입니다.")
