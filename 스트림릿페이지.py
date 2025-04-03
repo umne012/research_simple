@@ -9,14 +9,7 @@ import pandas as pd
 import json
 from pyvis.network import Network
 import streamlit.components.v1 as components
-import streamlit as st
-from datetime import date, timedelta
-import requests
-import plotly.graph_objects as go
-from streamlit_option_menu import option_menu
-from streamlit_tags import st_tags
 import time
-import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
@@ -276,8 +269,8 @@ elif selected_tab == "연관어 분석":
 
     @st.cache_data
     def load_word_and_sentence_data():
-        word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_recovered.xlsx"
-        morph_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_recovered.xlsx"
+        word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count.xlsx"
+        morph_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis.xlsx"
 
         word_response = requests.get(word_url)
         morph_response = requests.get(morph_url)
