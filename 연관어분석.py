@@ -79,7 +79,7 @@ def show_relation_tab():
     links_json = json.dumps(links)
     sentences_json = json.dumps(sentence_map, ensure_ascii=False)
 
-    html_code = f"""
+    html_code = """
     <!DOCTYPE html>
     <html lang="ko">
     <head>
@@ -103,27 +103,27 @@ def show_relation_tab():
         <div id="sentences">노드를 클릭해보세요.</div>
     </div>
     <script>
-    const nodes = {nodes_json};
-    const links = {links_json};
-    const sentenceData = {sentences_json};
-
+    const nodes = {nodes};
+    const links = {links};
+    const sentenceData = {sentences};
+    
     const width = document.querySelector("svg").clientWidth;
     const height = document.querySelector("svg").clientHeight;
     const svg = d3.select("svg");
-
+    
     const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(120))
         .force("charge", d3.forceManyBody().strength(-300))
         .force("center", d3.forceCenter(width / 2, height / 2));
-
+    
     const link = svg.append("g")
         .selectAll("line")
         .data(links)
         .enter().append("line")
         .attr("stroke", "#aaa")
         .attr("stroke-width", 2)
-        .attr("stroke-dasharray", d => d.target && d.target.includes && d.target.includes("_") && {len(set(links.filter(l => l.target === d.target)))} > 1 ? "0" : "4,2");
-
+        .attr("stroke-dasharray", d => link.filter(l => l.target === d.target).length > 1 ? "0" : "4,2");
+    
     const node = svg.append("g")
         .selectAll("g")
         .data(nodes)
@@ -132,7 +132,7 @@ def show_relation_tab():
             .on("start", dragstarted)
             .on("drag", dragged)
             .on("end", dragended));
-
+    
     node.append("circle")
         .attr("r", d => d.freq ? Math.max(10, Math.min(40, d.freq * 0.5)) : 30)
         .attr("fill", d => {{
@@ -163,18 +163,18 @@ def show_relation_tab():
                     return "#FFD700";
                 }});
         }});
-
+    
     node.append("title")
         .text(d => {{
             if (d.group === "brand") return "브랜드";
             return `감정: ${{d.group}}, 언급횟수: ${{d.freq}}`;
         }});
-
+    
     node.append("text")
         .attr("dy", "0.35em")
         .attr("text-anchor", "middle")
         .text(d => d.id.replace("_positive", "").replace("_negative", ""));
-
+    
     node.on("click", (event, d) => {{
         const panel = document.getElementById("sentences");
         const data = sentenceData[d.id];
@@ -184,11 +184,11 @@ def show_relation_tab():
         }}
         panel.innerHTML = data.map(s => `
             <a class="text-link" href="${{s['원본링크']}}" target="_blank">
-                ${s['문장']}
+                ${{s['문장']}}
             </a>
         `).join("");
     }});
-
+    
     simulation.on("tick", () => {{
         link.attr("x1", d => d.source.x)
             .attr("y1", d => d.source.y)
@@ -196,18 +196,18 @@ def show_relation_tab():
             .attr("y2", d => d.target.y);
         node.attr("transform", d => `translate(${{d.x}},${{d.y}})`);
     }});
-
+    
     function dragstarted(event, d) {{
         if (!event.active) simulation.alphaTarget(0.3).restart();
         d.fx = d.x;
         d.fy = d.y;
     }}
-
+    
     function dragged(event, d) {{
         d.fx = event.x;
         d.fy = event.y;
     }}
-
+    
     function dragended(event, d) {{
         if (!event.active) simulation.alphaTarget(0);
         d.fx = null;
@@ -216,6 +216,8 @@ def show_relation_tab():
     </script>
     </body>
     </html>
-    """
-
-    st.components.v1.html(html_code, height=650)
+    """.format(
+        nodes=nodes_json,
+        links=links_json,
+        sentences=sentences_json
+    )
