@@ -129,7 +129,7 @@ def show_trend_tab():
                 },
                 json={
                     "startDate": str(start_date),
-                    "endDate": str(end_date),
+                    "endDate": str(end_date+timedelta(days=1)),
                     "timeUnit": "date",
                     "keywordGroups": [
                         {"groupName": g["groupName"], "keywords": g["keywords"]} for g in search_groups
