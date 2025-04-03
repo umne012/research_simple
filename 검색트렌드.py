@@ -1,3 +1,14 @@
+import streamlit as st
+from datetime import date, timedelta
+import requests
+import plotly.graph_objects as go
+from streamlit_option_menu import option_menu
+from streamlit_tags import st_tags
+import time
+import streamlit.components.v1 as components
+
+
+
 st.title("검색트렌드 분석")
 
 # ✅ 검색어/제외어 설정
