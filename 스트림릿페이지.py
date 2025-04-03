@@ -269,26 +269,35 @@ elif selected_tab == "연관어 분석":
 
     @st.cache_data
     def load_word_and_sentence_data():
-        # ✅ GitHub에서 CSV로 불러오기
-        word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_recovered.xlsx"
-        morph_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_merged.csv"
+        import pandas as pd
+        import requests
+        from io import StringIO
     
-        # 단어 시트 여러 개 불러오기 (엑셀)
+        # 👉 단어 카운트 데이터 (병합된 CSV)
+        word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_merged.csv"
         word_response = requests.get(word_url)
         word_response.raise_for_status()
-        word_xls = pd.ExcelFile(BytesIO(word_response.content), engine="openpyxl")
+        word_df = pd.read_csv(StringIO(word_response.text))
     
-        word_data = {}
-        for sheet in word_xls.sheet_names:
-            df = pd.read_excel(word_xls, sheet_name=sheet, engine="openpyxl")
-            word_data[sheet] = df
+        # 👉 브랜드별로 분할
+        word_data = {
+            brand: df for brand, df in word_df.groupby("그룹")
+        }
     
-        # 병합된 CSV 읽기
-        morph_df = pd.read_csv(morph_url)
-        return word_data, morph_df
+        # 👉 감정 분석 CSV 파트별 불러오기
+        parts = ["part1", "part2", "part3"]
+        morph_frames = []
+        for part in parts:
+            url = f"https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_analysis_merged_{part}.csv"
+            response = requests.get(url)
+            response.raise_for_status()
+            morph_frames.append(pd.read_csv(StringIO(response.text)))
     
-    # ✅ 데이터 로드
-    word_data, sentence_df = load_word_and_sentence_data()
+        # 👉 전체 문장 데이터 합치기
+        sentence_df = pd.concat(morph_frames, ignore_index=True)
+    
+        return word_data, sentence_df
+
 
      from pyvis.network import Network
     import streamlit.components.v1 as components
