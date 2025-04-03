@@ -13,7 +13,7 @@ def show_relation_tab():
         word_df = pd.read_csv(StringIO(requests.get(word_url).text))
         word_data = {brand: df for brand, df in word_df.groupby("그룹")}
 
-        merged_url = "https://raw.githubusercontent.com/umne012/research_simple/main/sentimental_merged.csv"
+        merged_url = "https://raw.githubusercontent.com/umne012/research_simple/main/sentiment_analysis_merged.csv"
         sentence_df = pd.read_csv(merged_url)
         return word_data, sentence_df
 
