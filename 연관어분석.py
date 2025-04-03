@@ -112,7 +112,7 @@ def show_relation_tab():
     const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(50))
         .force("charge", d3.forceManyBody().strength(-100))
-        .force("center", d3.forceCenter(width / 3, height / 3));
+        .force("center", d3.forceCenter(width / 2, height / 2));
         .alphaDecay(0.05);  // ⬅ 빨리 멈추도록
         
     const linkCount = {{}};
@@ -138,7 +138,7 @@ def show_relation_tab():
             .on("end", dragended));
     
     node.append("circle")
-        .attr("r", d => d.freq ? Math.max(10, Math.min(40, d.freq * 0.5)) : 30)
+        .attr("r", d => d.freq ? Math.max(5, Math.min(30, d.freq * 0.3)) : 20)
         .attr("fill", d => {{
             if (d.group === "positive") return "#ADD8E6";
             if (d.group === "negative") return "#FA8072";
