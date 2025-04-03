@@ -53,7 +53,7 @@ nodes_json = json.dumps(nodes)
 links_json = json.dumps(links)
 
 # ✅ HTML 코드 작성 (템플릿 리터럴 문제 없음)
-html_code = """
+html_code = f"""
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -70,7 +70,7 @@ html_code = """
     <script>
         const nodes = {nodes_json};
         const links = {links_json};
-
+""" + """
         const width = document.querySelector("svg").clientWidth;
         const height = document.querySelector("svg").clientHeight;
         const svg = d3.select("svg");
@@ -98,45 +98,46 @@ html_code = """
 
         node.append("circle")
             .attr("r", d => d.freq ? Math.max(10, Math.min(40, d.freq * 0.5)) : 30)
-            .attr("fill", d => {{
+            .attr("fill", d => {
                 if (d.group === "positive") return "#9370DB";
                 if (d.group === "negative") return "#FA8072";
                 return "#FFD700";
-            }});
+            });
 
         node.append("text")
             .attr("dy", "0.35em")
             .attr("text-anchor", "middle")
             .text(d => d.id.replace("_positive", "").replace("_negative", ""));
 
-        simulation.on("tick", () => {{
+        simulation.on("tick", () => {
             link.attr("x1", d => d.source.x)
                 .attr("y1", d => d.source.y)
                 .attr("x2", d => d.target.x)
                 .attr("y2", d => d.target.y);
             node.attr("transform", d => `translate(${d.x},${d.y})`);
-        }});
+        });
 
-        function dragstarted(event, d) {{
+        function dragstarted(event, d) {
             if (!event.active) simulation.alphaTarget(0.3).restart();
             d.fx = d.x;
             d.fy = d.y;
-        }}
+        }
 
-        function dragged(event, d) {{
+        function dragged(event, d) {
             d.fx = event.x;
             d.fy = event.y;
-        }}
+        }
 
-        function dragended(event, d) {{
+        function dragended(event, d) {
             if (!event.active) simulation.alphaTarget(0);
             d.fx = null;
             d.fy = null;
-        }}
+        }
     </script>
 </body>
 </html>
 """
+
 
 # ✅ Streamlit에 렌더링
 st.components.v1.html(html_code, height=650)
