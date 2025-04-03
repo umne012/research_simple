@@ -4,33 +4,27 @@ import requests
 from io import StringIO
 import json
 
-st.title("📌 D3.js 네트워크 그래프 (CSV 기반)")
+st.title("📌 연관어 분석")
 
 @st.cache_data
 def load_data():
-    # 👉 단어 카운트 데이터
     word_url = "https://raw.githubusercontent.com/umne012/research_simple/main/morpheme_word_count_merged.csv"
     word_df = pd.read_csv(StringIO(requests.get(word_url).text))
-
-    # 👉 브랜드별로 분할
     word_data = {
         brand: df for brand, df in word_df.groupby("그룹")
     }
-
     return word_data
 
 word_data = load_data()
 
-# ✅ nodes와 links 리스트 생성
 nodes = []
 links = []
 added_words = set()
 
 for brand, df in word_data.items():
-    # 브랜드 노드 추가
     nodes.append({"id": brand, "group": "brand"})
-
     word_entries = []
+
     for _, row in df.iterrows():
         word = row["단어"]
         if row.get("positive", 0) > 0:
@@ -38,11 +32,9 @@ for brand, df in word_data.items():
         if row.get("negative", 0) > 0:
             word_entries.append((f"{word}_negative", row["negative"], "negative", word))
 
-    # 상위 10개 단어만
     top_entries = sorted(word_entries, key=lambda x: x[1], reverse=True)[:10]
 
     for node_id, freq, sentiment, word_text in top_entries:
-        # 단어 노드 추가
         if node_id not in added_words:
             nodes.append({
                 "id": node_id,
@@ -51,14 +43,17 @@ for brand, df in word_data.items():
             })
             added_words.add(node_id)
 
-        # 링크 추가 (브랜드 → 단어)
         links.append({
             "source": brand,
             "target": node_id
         })
 
-# ✅ D3.js 시각화 삽입
-st.components.v1.html(f"""
+# ✅ JSON으로 변환
+nodes_json = json.dumps(nodes)
+links_json = json.dumps(links)
+
+# ✅ HTML 코드 작성 (템플릿 리터럴 문제 없음)
+html_code = f"""
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -73,8 +68,8 @@ st.components.v1.html(f"""
 <body>
     <svg></svg>
     <script>
-        const nodes = {json.dumps(nodes)};
-        const links = {json.dumps(links)};
+        const nodes = {nodes_json};
+        const links = {links_json};
 
         const width = document.querySelector("svg").clientWidth;
         const height = document.querySelector("svg").clientHeight;
@@ -102,14 +97,11 @@ st.components.v1.html(f"""
                 .on("end", dragended));
 
         node.append("circle")
-            .attr("r", d => {{
-                if (d.freq) return Math.max(10, Math.min(40, d.freq * 0.5));
-                return 30; // 브랜드 크기
-            }})
+            .attr("r", d => d.freq ? Math.max(10, Math.min(40, d.freq * 0.5)) : 30)
             .attr("fill", d => {{
                 if (d.group === "positive") return "#9370DB";
                 if (d.group === "negative") return "#FA8072";
-                return "#FFD700"; // 브랜드
+                return "#FFD700";
             }});
 
         node.append("text")
@@ -122,7 +114,6 @@ st.components.v1.html(f"""
                 .attr("y1", d => d.source.y)
                 .attr("x2", d => d.target.x)
                 .attr("y2", d => d.target.y);
-
             node.attr("transform", d => `translate(${d.x},${d.y})`);
         }});
 
@@ -145,4 +136,7 @@ st.components.v1.html(f"""
     </script>
 </body>
 </html>
-""", height=650)
+"""
+
+# ✅ Streamlit에 렌더링
+st.components.v1.html(html_code, height=650)
