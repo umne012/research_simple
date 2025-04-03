@@ -4,7 +4,7 @@ import requests
 from io import StringIO
 import json
 
-st.set_page_config(layout="wide")
+
 st.title("📌 연관어 분석")
 
 # 형태소 분석 문장 불러오기
