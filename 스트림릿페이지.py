@@ -1,5 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
+st.set_page_config(layout="wide")
 
 # ✅ 탭 선택 상태 유지
 if "selected_tab" not in st.session_state:
