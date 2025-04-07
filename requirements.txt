@@ -8,3 +8,4 @@ pyvis
 openpyxl
 xlsxwriter
 matplotlib
+seaborn
