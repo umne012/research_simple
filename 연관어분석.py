@@ -28,16 +28,32 @@ def show_relation_tab():
         word_df = pd.read_csv(word_url)
         word_data = {brand: df for brand, df in word_df.groupby("그룹")}
 
-        morph_frames = [pd.read_csv(url) for url in morph_urls]
+        morph_frames = []
+        for url in morph_urls:
+            try:
+                df = pd.read_csv(url)
+                if not df.empty and all(col in df.columns for col in ["단어", "감정", "문장ID"]):
+                    morph_frames.append(df)
+            except Exception as e:
+                st.warning(f"⚠️ {url} 불러오기 실패: {e}")
+        if not morph_frames:
+            st.error("❌ 형태소 분석 데이터가 없거나 비어 있습니다.")
+            return None, None, None
         morph_df = pd.concat(morph_frames, ignore_index=True)
 
-        sentiment_df = pd.read_csv(sentiment_url)
-        return word_data, morph_df, sentiment_df
+        try:
+            sent_df = pd.read_csv(sentiment_url)
+            if not all(col in sent_df.columns for col in ["문장ID", "문장", "원본링크"]):
+                st.error("❌ sentiment_analysis.csv에 필요한 컬럼이 없습니다.")
+                return None, None, None
+        except Exception as e:
+            st.error(f"sentiment_analysis.csv 불러오기 오류: {e}")
+            return None, None, None
 
-    try:
-        word_data, morph_df, sent_df = load_data()
-    except Exception as e:
-        st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")
+        return word_data, morph_df, sent_df
+
+    word_data, morph_df, sent_df = load_data()
+    if word_data is None:
         return
 
     nodes, links, added_words = [], [], set()
@@ -111,7 +127,7 @@ def show_relation_tab():
         .force("charge", d3.forceManyBody().strength(-100))
         .force("center", d3.forceCenter(width / 2, height / 2));
 
-    const linkCount = {{}};
+    const linkCount = {};
     links.forEach(l => {{ linkCount[l.target] = (linkCount[l.target] || 0) + 1; }});
 
     const link = svg.append("g")
@@ -149,7 +165,7 @@ def show_relation_tab():
         const panel = document.getElementById("sentences");
         const data = sentenceData[d.id];
         if (!data || data.length === 0) {{ panel.innerHTML = "<i>관련 문장이 없습니다.</i>"; return; }}
-        panel.innerHTML = data.map(s => `<a class='text-link' href='${{s["원본링크"]}}' target='_blank'>${{s["문장"]}}</a>`).join("");
+        panel.innerHTML = data.map(s => `<a class='text-link' href='${s["원본링크"]}' target='_blank'>${s["문장"]}</a>`).join("");
     }});
 
     simulation.on("tick", () => {{
@@ -168,8 +184,8 @@ def show_relation_tab():
 
     # 📈 선그래프
     st.markdown("### 📈 일자별 언급량 추이")
-    if "날짜" in sent_df.columns and "원본링크" in sent_df.columns and "브랜드" in sent_df.columns:
-        mention_daily = sent_df.groupby(["날짜", "브랜드"])['원본링크'].nunique().reset_index(name="언급량")
+    if sent_df is not None and "날짜" in sent_df.columns and "원본링크" in sent_df.columns and "브랜드" in sent_df.columns:
+        mention_daily = sent_df.groupby(["날짜", "브랜드"])["원본링크"].nunique().reset_index(name="언급량")
         fig, ax = plt.subplots(figsize=(10, 3.5))
         sns.lineplot(data=mention_daily, x="날짜", y="언급량", hue="브랜드", marker="o", ax=ax)
         ax.set_ylabel("언급량")
