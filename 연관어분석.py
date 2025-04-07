@@ -19,9 +19,9 @@ def show_relation_tab():
     selected_week = weeks[selected_label]
 
     base_url = f"https://raw.githubusercontent.com/umne012/research_simple/main/{selected_week}"
-    word_url = f"{base_url}/morpheme_word_count_merged.csv"
+    word_url = f"{base_url}/morpheme_word_count.csv"
     morph_urls = [f"{base_url}/morpheme_analysis_part{i}.csv" for i in range(1, 4)]
-    sentiment_url = f"{base_url}/sentiment_analysis_merged.csv"
+    sentiment_url = f"{base_url}/sentiment_analysis.csv"
 
     @st.cache_data(show_spinner=False)
     def load_data():
@@ -49,6 +49,10 @@ def show_relation_tab():
         except Exception as e:
             st.error(f"sentiment_analysis.csv 불러오기 오류: {e}")
             return None, None, None
+
+        # ✅ 문장ID를 문자열로 통일
+        morph_df["문장ID"] = morph_df["문장ID"].astype(str)
+        sent_df["문장ID"] = sent_df["문장ID"].astype(str)
 
         return word_data, morph_df, sent_df
 
