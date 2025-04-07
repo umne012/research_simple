@@ -50,7 +50,6 @@ def show_relation_tab():
             st.error(f"sentiment_analysis.csv 불러오기 오류: {e}")
             return None, None, None
 
-        # ✅ 문장ID를 문자열로 통일
         morph_df["문장ID"] = morph_df["문장ID"].astype(str)
         sent_df["문장ID"] = sent_df["문장ID"].astype(str)
 
@@ -131,7 +130,7 @@ def show_relation_tab():
         .force("charge", d3.forceManyBody().strength(-100))
         .force("center", d3.forceCenter(width / 2, height / 2));
 
-    const linkCount = {};
+    const linkCount = {{}};
     links.forEach(l => {{ linkCount[l.target] = (linkCount[l.target] || 0) + 1; }});
 
     const link = svg.append("g")
@@ -158,7 +157,7 @@ def show_relation_tab():
         .on("mouseout", function (event, d) {{ d3.select(this).attr("stroke-dasharray", "4,2"); }});
 
     node.append("title")
-        .text(d => d.group === "brand" ? "브랜드" : `감정: ${d.group}, 언급횟수: ${d.freq}`);
+        .text(d => d.group === "brand" ? "브랜드" : `감정: ${{d.group}}, 언급횟수: ${{d.freq}}`);
 
     node.append("text")
         .attr("dy", "0.35em").attr("text-anchor", "middle")
@@ -169,13 +168,13 @@ def show_relation_tab():
         const panel = document.getElementById("sentences");
         const data = sentenceData[d.id];
         if (!data || data.length === 0) {{ panel.innerHTML = "<i>관련 문장이 없습니다.</i>"; return; }}
-        panel.innerHTML = data.map(s => `<a class='text-link' href='${s["원본링크"]}' target='_blank'>${s["문장"]}</a>`).join("");
+        panel.innerHTML = data.map(s => `<a class='text-link' href='${{s["원본링크"]}}' target='_blank'>${{s["문장"]}}</a>`).join("");
     }});
 
     simulation.on("tick", () => {{
         link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
             .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-        node.attr("transform", d => `translate(${d.x},${d.y})`);
+        node.attr("transform", d => `translate(${{d.x}},${{d.y}})`);
     }});
 
     function dragstarted(event, d) {{ if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }}
