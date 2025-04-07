@@ -19,10 +19,9 @@ def show_relation_tab():
     selected_week = weeks[selected_label]
 
     base_url = f"https://raw.githubusercontent.com/umne012/research_simple/main/{selected_week}"
-    word_url = f"{base_url}/morpheme_word_count.csv"
+    word_url = f"{base_url}/morpheme_word_count_merged.csv"
     morph_urls = [f"{base_url}/morpheme_analysis_part{i}.csv" for i in range(1, 4)]
-    sentiment_url = f"{base_url}/sentiment_analysis.csv"
-    mention_url = f"{base_url}/mention_volume.csv"
+    sentiment_url = f"{base_url}/sentiment_analysis_merged.csv"
 
     @st.cache_data(show_spinner=False)
     def load_data():
@@ -33,11 +32,10 @@ def show_relation_tab():
         morph_df = pd.concat(morph_frames, ignore_index=True)
 
         sentiment_df = pd.read_csv(sentiment_url)
-        mention_df = pd.read_csv(mention_url)
-        return word_data, morph_df, sentiment_df, mention_df
+        return word_data, morph_df, sentiment_df
 
     try:
-        word_data, morph_df, sent_df, mention_df = load_data()
+        word_data, morph_df, sent_df = load_data()
     except Exception as e:
         st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")
         return
@@ -170,10 +168,14 @@ def show_relation_tab():
 
     # 📈 선그래프
     st.markdown("### 📈 일자별 언급량 추이")
-    fig, ax = plt.subplots(figsize=(10, 3.5))
-    sns.lineplot(data=mention_df, x="날짜", y="언급량", hue="브랜드", marker="o", ax=ax)
-    ax.set_ylabel("언급량")
-    ax.set_xlabel("날짜")
-    ax.tick_params(axis='x', rotation=45)
-    ax.set_title("일자별 브랜드 언급량")
-    st.pyplot(fig)
+    if "날짜" in sent_df.columns and "원본링크" in sent_df.columns and "브랜드" in sent_df.columns:
+        mention_daily = sent_df.groupby(["날짜", "브랜드"])['원본링크'].nunique().reset_index(name="언급량")
+        fig, ax = plt.subplots(figsize=(10, 3.5))
+        sns.lineplot(data=mention_daily, x="날짜", y="언급량", hue="브랜드", marker="o", ax=ax)
+        ax.set_ylabel("언급량")
+        ax.set_xlabel("날짜")
+        ax.tick_params(axis='x', rotation=45)
+        ax.set_title("일자별 브랜드 언급량")
+        st.pyplot(fig)
+    else:
+        st.info("📌 일자별 언급량을 시각화하려면 sentiment_analysis.csv에 '날짜', '브랜드' 컬럼이 있어야 합니다.")
