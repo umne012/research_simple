@@ -40,11 +40,9 @@ def show_relation_tab():
             st.error("❌ 형태소 분석 데이터가 없거나 비어 있습니다.")
             return None, None, None
         morph_df = pd.concat(morph_frames, ignore_index=True)
-        morph_df["문장ID"] = morph_df["문장ID"].astype(str) 
 
         try:
             sent_df = pd.read_csv(sentiment_url)
-            sent_df["문장ID"] = sent_df["문장ID"].astype(str) 
             if not all(col in sent_df.columns for col in ["문장ID", "문장", "원본링크"]):
                 st.error("❌ sentiment_analysis.csv에 필요한 컬럼이 없습니다.")
                 return None, None, None
