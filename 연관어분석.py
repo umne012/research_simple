@@ -103,12 +103,11 @@ def show_relation_tab():
     links_json = json.dumps(links)
     sentences_json = json.dumps(sentence_map, ensure_ascii=False)
 
-    # ✅ HTML 코드 직접 포함
     html_code = f"""
     <!DOCTYPE html>
-    <html lang="ko">
+    <html lang=\"ko\">
     <head>
-    <meta charset="UTF-8">
+    <meta charset=\"UTF-8\">
     <style>
     body {{ display: flex; font-family: Arial, sans-serif; }}
     svg {{ width: 75%; height: 600px; border: 1px solid #ccc; }}
@@ -119,13 +118,13 @@ def show_relation_tab():
     h3 {{ margin-top: 0; }}
     .text-link {{ margin-bottom: 8px; display: block; font-size: 13px; }}
     </style>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src=\"https://d3js.org/d3.v7.min.js\"></script>
     </head>
     <body>
     <svg></svg>
-    <div id="sentence-panel">
-        <h3>📝 관련 문장 <span id="mention-count" style="font-size:12px; color:#555;"></span></h3>
-        <div id="sentences">노드를 클릭해보세요.</div>
+    <div id=\"sentence-panel\">
+        <h3>📝 관련 문장 <span id=\"mention-count\" style=\"font-size:12px; color:#555;\"></span></h3>
+        <div id=\"sentences\">노드를 클릭해보세요.</div>
     </div>
     <script>
     const nodes = {nodes_json};
