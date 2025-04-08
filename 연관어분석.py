@@ -103,10 +103,141 @@ def show_relation_tab():
     links_json = json.dumps(links)
     sentences_json = json.dumps(sentence_map, ensure_ascii=False)
 
-    html_template = open("network_graph.html", encoding="utf-8").read()
-    st.components.v1.html(html_template, height=650)
+    # ✅ HTML 코드 직접 포함
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    body {{ display: flex; font-family: Arial, sans-serif; }}
+    svg {{ width: 75%; height: 600px; border: 1px solid #ccc; }}
+    #sentence-panel {{
+        width: 25%; padding: 10px; background: #f9f9f9;
+        border-left: 1px solid #ddd; overflow-y: auto; height: 600px;
+    }}
+    h3 {{ margin-top: 0; }}
+    .text-link {{ margin-bottom: 8px; display: block; font-size: 13px; }}
+    </style>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    </head>
+    <body>
+    <svg></svg>
+    <div id="sentence-panel">
+        <h3>📝 관련 문장 <span id="mention-count" style="font-size:12px; color:#555;"></span></h3>
+        <div id="sentences">노드를 클릭해보세요.</div>
+    </div>
+    <script>
+    const nodes = {nodes_json};
+    const links = {links_json};
+    const sentenceData = {sentences_json};
+    const linkCount = {{}};
+    links.forEach(l => {{
+        linkCount[l.target] = (linkCount[l.target] || 0) + 1;
+    }});
+    const width = document.querySelector("svg").clientWidth;
+    const height = document.querySelector("svg").clientHeight;
+    const svg = d3.select("svg");
 
-    # ✅ 선그래프 (Plotly Graph Object 방식으로 교체)
+    const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(90))
+        .force("charge", d3.forceManyBody().strength(-120))
+        .force("center", d3.forceCenter(width / 2, height / 2));
+
+    const link = svg.append("g")
+        .selectAll("line")
+        .data(links)
+        .enter().append("line")
+        .attr("stroke", "#aaa")
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", d => linkCount[d.target] > 1 ? "0" : "4,4");
+
+    const node = svg.append("g")
+        .selectAll("g")
+        .data(nodes)
+        .enter().append("g")
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+
+    node.append("circle")
+        .attr("r", d => d.freq ? Math.max(5, Math.min(30, d.freq * 0.3)) : 20)
+        .attr("fill", d => d.group === "positive" ? "#ADD8E6" : d.group === "negative" ? "#FA8072" : "#FFD700")
+        .attr("stroke", "#333")
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", "4,2")
+        .on("mouseover", function(event, d) {
+            d3.select(this)
+              .transition().duration(150)
+              .attr("stroke-dasharray", "0")
+              .attr("fill", d.group === "positive" ? "#87CEEB" : d.group === "negative" ? "#E75454" : "#FFC700");
+        })
+        .on("mouseout", function(event, d) {
+            d3.select(this)
+              .transition().duration(150)
+              .attr("stroke-dasharray", "4,2")
+              .attr("fill", d.group === "positive" ? "#ADD8E6" : d.group === "negative" ? "#FA8072" : "#FFD700");
+        });
+
+    node.append("title")
+        .text(d => d.group === "brand" ? "브랜드" : `감정: ${d.group}, 언급횟수: ${d.freq}`);
+
+    node.append("text")
+        .attr("dy", "0.35em")
+        .attr("text-anchor", "middle")
+        .attr("font-size", "11px")
+        .text(d => d.id.replace("_positive", "").replace("_negative", ""));
+
+    node.on("click", (event, d) => {
+        const panel = document.getElementById("sentences");
+        const countEl = document.getElementById("mention-count");
+        const data = sentenceData[d.id];
+        if (!data || data.length === 0) {
+            panel.innerHTML = "<i>관련 문장이 없습니다.</i>";
+            countEl.textContent = "";
+            return;
+        }
+        countEl.textContent = ` (언급횟수: ${data[0].count}회)`;
+        panel.innerHTML = data.map(s => `
+            <a class="text-link" href="${s['원본링크']}" target="_blank">
+                ${s['문장']}
+            </a>
+        `).join("");
+    });
+
+    simulation.on("tick", () => {
+        link.attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+        node.attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
+    </script>
+    </body>
+    </html>
+    """
+
+    st.components.v1.html(html_code, height=650)
+
+    # ✅ 선그래프 (Plotly Graph Object 방식)
     st.markdown("### 📊 일자별 언급량 추이")
     if sent_df is not None and "날짜" in sent_df.columns and "원본링크" in sent_df.columns and "그룹" in sent_df.columns:
         mention_daily = sent_df.groupby(["날짜", "그룹"])["원본링크"].nunique().reset_index(name="언급량")
@@ -118,13 +249,7 @@ def show_relation_tab():
             margin=dict(l=40, r=40, t=60, b=100),
             xaxis=dict(title="날짜", showgrid=True, tickangle=-45),
             yaxis=dict(title="언급량", showgrid=True),
-            legend=dict(
-                orientation="h",
-                x=0.5,
-                y=-0.2,
-                xanchor="center",
-                yanchor="top"
-            )
+            legend=dict(orientation="h", x=0.5, y=-0.2, xanchor="center", yanchor="top")
         )
 
         fig = go.Figure(layout=layout)
