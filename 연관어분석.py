@@ -187,14 +187,14 @@ def show_relation_tab():
 
     # 📈 선그래프
     st.markdown("### 📈 일자별 언급량 추이")
-    if sent_df is not None and "날짜" in sent_df.columns and "원본링크" in sent_df.columns and "브랜드" in sent_df.columns:
-        mention_daily = sent_df.groupby(["날짜", "브랜드"])["원본링크"].nunique().reset_index(name="언급량")
+    if sent_df is not None and "날짜" in sent_df.columns and "원본링크" in sent_df.columns and "그룹" in sent_df.columns:
+        mention_daily = sent_df.groupby(["날짜", "그룹"])["원본링크"].nunique().reset_index(name="언급량")
         fig, ax = plt.subplots(figsize=(10, 3.5))
-        sns.lineplot(data=mention_daily, x="날짜", y="언급량", hue="브랜드", marker="o", ax=ax)
+        sns.lineplot(data=mention_daily, x="날짜", y="언급량", hue="그룹", marker="o", ax=ax)
         ax.set_ylabel("언급량")
         ax.set_xlabel("날짜")
         ax.tick_params(axis='x', rotation=45)
         ax.set_title("일자별 브랜드 언급량")
         st.pyplot(fig)
     else:
-        st.info("📌 일자별 언급량을 시각화하려면 sentiment_analysis.csv에 '날짜', '브랜드' 컬럼이 있어야 합니다.")
+        st.info("📌 일자별 언급량을 시각화하려면 sentiment_analysis.csv에 '날짜', '그룹' 컬럼이 있어야 합니다.")
