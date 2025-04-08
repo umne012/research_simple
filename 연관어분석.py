@@ -103,8 +103,11 @@ def show_relation_tab():
     links_json = json.dumps(links)
     sentences_json = json.dumps(sentence_map, ensure_ascii=False)
 
-    st.components.v1.html(f"""
-    <iframe srcdoc='<html><body><svg></svg></body></html>' width='100%' height='650'></iframe>""", height=650)
+    with open("network_graph.html", encoding="utf-8") as f:
+        html_template = f.read()
+
+    html_code = html_template.replace("__NODES__", nodes_json).replace("__LINKS__", links_json).replace("__SENTENCES__", sentences_json)
+    st.components.v1.html(html_code, height=650)
 
     # ✅ 선그래프 (Plotly Graph Object 방식)
     st.markdown("### 📊 일자별 언급량 추이")
