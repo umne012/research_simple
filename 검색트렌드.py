@@ -268,7 +268,7 @@ def show_trend_tab():
                 mention_detail_df.to_excel(writer, index=False, sheet_name="뉴스_블로그_문장")
         
             output.seek(0)
-            st.download_button(
+            st.download_excel(
                 label="📥 엑셀 다운로드",
                 data=output,
                 file_name="검색트렌드_분석결과.xlsx",
