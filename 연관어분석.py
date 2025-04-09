@@ -226,14 +226,14 @@ def show_relation_tab():
     st.components.v1.html(html_code, height=650)
 
     # ✅ 선그래프 (Plotly Graph Object 방식)
-    st.markdown("### 📊 일자별 언급량 추이")
+    st.markdown("### 일자별 언급량 추이")
     if sent_df is not None and "날짜" in sent_df.columns and "원본링크" in sent_df.columns and "그룹" in sent_df.columns:
         mention_daily = sent_df.groupby(["날짜", "그룹"])["원본링크"].nunique().reset_index(name="언급량")
 
         layout = go.Layout(
             plot_bgcolor="#ffffff",
             paper_bgcolor="#ffffff",
-            title=dict(text="일자별 브랜드 언급량 추이", x=0.05, font=dict(size=18)),
+            #title=dict(text="일자별 브랜드 언급량 추이", x=0.05, font=dict(size=18)),
             margin=dict(l=40, r=40, t=60, b=100),
             xaxis=dict(title="날짜", showgrid=True, tickangle=-45),
             yaxis=dict(title="언급량", showgrid=True),
