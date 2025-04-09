@@ -5,10 +5,10 @@ def show_relation_tab():
     import plotly.graph_objects as go
     from io import StringIO
     import json
-    import base64
 
     st.title("📌 연관어 분석")
 
+    # ✅ 주차 선택
     weeks = {
         "3월 1주차 ('25.3.1~3.7)": "2025_03w1",
         "3월 2주차 ('25.3.8~3.14)": "2025_03w2",
@@ -18,7 +18,7 @@ def show_relation_tab():
     selected_week = weeks[selected_label]
 
     base_url = f"https://raw.githubusercontent.com/umne012/research_simple/main/{selected_week}"
-    word_url = f"{base_url}/morpheme_word_count.csv"
+    word_url = f"{base_url}/morpheme_word_count_merged.csv"
     morph_urls = [f"{base_url}/morpheme_analysis_part{i}.csv" for i in range(1, 4)]
     sentiment_url = f"{base_url}/sentiment_analysis_merged.csv"
 
@@ -43,7 +43,7 @@ def show_relation_tab():
         try:
             sent_df = pd.read_csv(sentiment_url)
         except Exception as e:
-            st.error(f"sentiment_analysis_merged.csv 불러오기 오류: {e}")
+            st.error(f"sentiment_analysis.csv 불러오기 오류: {e}")
             return None, None, None
 
         morph_df["문장ID"] = morph_df["문장ID"].astype(str)
@@ -54,49 +54,6 @@ def show_relation_tab():
     word_data, morph_df, sent_df = load_data()
     if word_data is None:
         return
-
-    # ✅ 다운로드용 데이터 구성
-    export_rows = []
-    for brand, df in word_data.items():
-        word_entries = []
-        for _, row in df.iterrows():
-            word = row["단어"]
-            if row.get("positive", 0) > 0:
-                word_entries.append((word, row["positive"], "positive"))
-            if row.get("negative", 0) > 0:
-                word_entries.append((word, row["negative"], "negative"))
-
-        top_entries = sorted(word_entries, key=lambda x: x[1], reverse=True)[:10]
-        for word, freq, sentiment in top_entries:
-            match = morph_df[(morph_df["단어"] == word) & (morph_df["감정"] == sentiment)]
-            matched_ids = match["문장ID"].unique()
-            matched_sents = sent_df[sent_df["문장ID"].isin(matched_ids)]
-            for _, row in matched_sents.iterrows():
-                export_rows.append({
-                    "브랜드": brand,
-                    "단어": word,
-                    "감정": sentiment,
-                    "언급횟수": freq,
-                    "문장": row["문장"],
-                    "링크": row["원본링크"]
-                })
-
-    col1, col2 = st.columns([5, 1])
-    with col1:
-        st.markdown(f"### 📂 {selected_label}")
-    with col2:
-        if export_rows:
-            export_df = pd.DataFrame(export_rows)
-            towrite = StringIO()
-            export_df.to_csv(towrite, index=False)
-            b64 = base64.b64encode(towrite.getvalue().encode()).decode()
-            href = f"<a href='data:file/csv;base64,{b64}' download='{selected_week}_연관어_문장.csv'>📥</a>"
-            st.markdown(f"<div style='text-align:right;font-size:24px;padding-top:25px'>{href}</div>", unsafe_allow_html=True)
-
-    # (중략 - 네트워크 그래프 및 선그래프 출력은 그대로 유지)
-    st.markdown("\n")
-
-
 
     nodes, links, added_words = [], [], set()
     sentence_map = {}
@@ -269,14 +226,14 @@ def show_relation_tab():
     st.components.v1.html(html_code, height=650)
 
     # ✅ 선그래프 (Plotly Graph Object 방식)
-    st.markdown("### 일자별 언급량 추이")
+    st.markdown("### 📊 일자별 언급량 추이")
     if sent_df is not None and "날짜" in sent_df.columns and "원본링크" in sent_df.columns and "그룹" in sent_df.columns:
         mention_daily = sent_df.groupby(["날짜", "그룹"])["원본링크"].nunique().reset_index(name="언급량")
 
         layout = go.Layout(
             plot_bgcolor="#ffffff",
             paper_bgcolor="#ffffff",
-            #title=dict(text="일자별 브랜드 언급량 추이", x=0.05, font=dict(size=18)),
+            title=dict(text="일자별 브랜드 언급량 추이", x=0.05, font=dict(size=18)),
             margin=dict(l=40, r=40, t=60, b=100),
             xaxis=dict(title="날짜", showgrid=True, tickangle=-45),
             yaxis=dict(title="언급량", showgrid=True),
