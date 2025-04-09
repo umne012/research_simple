@@ -5,30 +5,29 @@ def show_relation_tab():
     import plotly.graph_objects as go
     from io import StringIO
     import json
+    import base64
 
     st.title("📌 연관어 분석")
 
-    # ✅ 주차 선택
-    weeks = {
-        "3월 1주차 ('25.3.1~3.7)": "2025_03w1",
-        "3월 2주차 ('25.3.8~3.14)": "2025_03w2",
-        "3월 3주차 ('25.3.15~3.21)": "2025_03w3"
-    }
-    selected_label = st.selectbox("📂 주차 선택", list(weeks.keys()), index=0)
-    selected_week = weeks[selected_label]
+    # ✅ 주차 선택 및 엑셀 다운로드 버튼
+    col1, col2 = st.columns([5, 1])
+    with col1:
+        weeks = {
+            "3월 1주차 ('25.3.1~3.7)": "2025_03w1",
+            "3월 2주차 ('25.3.8~3.14)": "2025_03w2",
+            "3월 3주차 ('25.3.15~3.21)": "2025_03w3"
+        }
+        selected_label = st.selectbox("📂 주차 선택", list(weeks.keys()), index=0, label_visibility="visible")
+        selected_week = weeks[selected_label]
 
-    base_url = f"https://raw.githubusercontent.com/umne012/research_simple/main/{selected_week}"
-    word_url = f"{base_url}/morpheme_word_count_merged.csv"
-    morph_urls = [f"{base_url}/morpheme_analysis_part{i}.csv" for i in range(1, 4)]
-    sentiment_url = f"{base_url}/sentiment_analysis_merged.csv"
     with col2:
         if st.session_state.get("download_ready"):
             st.markdown(st.session_state["download_link"], unsafe_allow_html=True)
 
     base_url = f"https://raw.githubusercontent.com/umne012/research_simple/main/{selected_week}"
-    word_url = f"{base_url}/morpheme_word_count.csv"
+    word_url = f"{base_url}/morpheme_word_count_merged.csv"
     morph_urls = [f"{base_url}/morpheme_analysis_part{i}.csv" for i in range(1, 4)]
-    sentiment_url = f"{base_url}/sentiment_analysis.csv"
+    sentiment_url = f"{base_url}/sentiment_analysis_merged.csv"
 
     @st.cache_data(show_spinner=False)
     def load_data():
@@ -102,6 +101,8 @@ def show_relation_tab():
         st.session_state["download_link"] = ""
 
     # (중략 - 네트워크 그래프 및 선그래프 출력은 그대로 유지)
+    st.markdown("\n")
+
     
 
     nodes, links, added_words = [], [], set()
