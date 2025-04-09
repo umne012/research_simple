@@ -88,13 +88,14 @@ def show_relation_tab():
         if export_rows:
             export_df = pd.DataFrame(export_rows)
             towrite = StringIO()
-            export_df.to_csv(towrite, index=False)
+            export_df.to_csv(towrite, index=False, encoding="utf-8-sig")
             b64 = base64.b64encode(towrite.getvalue().encode()).decode()
             href = f"<a href='data:file/csv;base64,{b64}' download='{selected_week}_연관어_문장.csv'>📥</a>"
             st.markdown(f"<div style='text-align:right;font-size:24px;padding-top:25px'>{href}</div>", unsafe_allow_html=True)
 
     # (중략 - 네트워크 그래프 및 선그래프 출력은 그대로 유지)
     st.markdown("\n")
+
 
 
     nodes, links, added_words = [], [], set()
