@@ -237,7 +237,7 @@ def show_relation_tab():
             margin=dict(l=40, r=40, t=60, b=100),
             xaxis=dict(title="날짜", showgrid=True, tickangle=-45),
             yaxis=dict(title="언급량", showgrid=True),
-            legend=dict(orientation="h", x=0.5, y=-0.2, xanchor="center", yanchor="top")
+            legend=dict(orientation="h", x=0.5, y=-0.3, xanchor="center", yanchor="top")
         )
 
         fig = go.Figure(layout=layout)
