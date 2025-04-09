@@ -6,12 +6,14 @@ def show_relation_tab():
     from io import StringIO
     import json
     import base64
+    
     st.markdown("""
         <style>
         * {
             font-family: 'Pretendard', sans-serif;
 
-        }
+        })
+        
     st.title("📌 연관어 분석")
 
     weeks = {
