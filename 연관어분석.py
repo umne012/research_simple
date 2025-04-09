@@ -21,8 +21,9 @@ def show_relation_tab():
         selected_week = weeks[selected_label]
 
     with col2:
-        if st.session_state.get("download_ready"):
-            st.markdown(st.session_state["download_link"], unsafe_allow_html=True)
+        if export_rows:  # export_rows 생성 이후에만 버튼 표시
+            href = f"<a href='data:file/csv;base64,{b64}' download='{selected_week}_연관어_문장.csv'>📥</a>"
+            st.markdown(f"<div style='text-align:right;font-size:24px;padding-top:20px'>{href}</div>", unsafe_allow_html=True)
 
     base_url = f"https://raw.githubusercontent.com/umne012/research_simple/main/{selected_week}"
     word_url = f"{base_url}/morpheme_word_count_merged.csv"
