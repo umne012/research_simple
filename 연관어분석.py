@@ -9,26 +9,18 @@ def show_relation_tab():
 
     st.title("📌 연관어 분석")
 
-    # ✅ 주차 선택 및 엑셀 다운로드 버튼
-    col1, col2 = st.columns([5, 1])
-    with col1:
-        weeks = {
-            "3월 1주차 ('25.3.1~3.7)": "2025_03w1",
-            "3월 2주차 ('25.3.8~3.14)": "2025_03w2",
-            "3월 3주차 ('25.3.15~3.21)": "2025_03w3"
-        }
-        selected_label = st.selectbox("📂 주차 선택", list(weeks.keys()), index=0, label_visibility="visible")
-        selected_week = weeks[selected_label]
-
-    with col2:
-        if export_rows:  # export_rows 생성 이후에만 버튼 표시
-            href = f"<a href='data:file/csv;base64,{b64}' download='{selected_week}_연관어_문장.csv'>📥</a>"
-            st.markdown(f"<div style='text-align:right;font-size:24px;padding-top:20px'>{href}</div>", unsafe_allow_html=True)
+    weeks = {
+        "3월 1주차 ('25.3.1~3.7)": "2025_03w1",
+        "3월 2주차 ('25.3.8~3.14)": "2025_03w2",
+        "3월 3주차 ('25.3.15~3.21)": "2025_03w3"
+    }
+    selected_label = st.selectbox("📂 주차 선택", list(weeks.keys()), index=0)
+    selected_week = weeks[selected_label]
 
     base_url = f"https://raw.githubusercontent.com/umne012/research_simple/main/{selected_week}"
     word_url = f"{base_url}/morpheme_word_count_merged.csv"
     morph_urls = [f"{base_url}/morpheme_analysis_part{i}.csv" for i in range(1, 4)]
-    sentiment_url = f"{base_url}/sentiment_analysis_merged.csv"
+    sentiment_url = f"{base_url}/sentiment_analysis_merge.csv"
 
     @st.cache_data(show_spinner=False)
     def load_data():
@@ -89,22 +81,21 @@ def show_relation_tab():
                     "링크": row["원본링크"]
                 })
 
-    if export_rows:
-        export_df = pd.DataFrame(export_rows)
-        towrite = StringIO()
-        export_df.to_csv(towrite, index=False)
-        b64 = base64.b64encode(towrite.getvalue().encode()).decode()
-        href = f"<a href='data:file/csv;base64,{b64}' download='{selected_week}_연관어_문장.csv'>📥</a>"
-        st.session_state["download_ready"] = True
-        st.session_state["download_link"] = f"<div style='text-align:right;font-size:20px;margin-top:35px'>{href}</div>"
-    else:
-        st.session_state["download_ready"] = False
-        st.session_state["download_link"] = ""
+    col1, col2 = st.columns([5, 1])
+    with col1:
+        st.markdown(f"### 📂 {selected_label}")
+    with col2:
+        if export_rows:
+            export_df = pd.DataFrame(export_rows)
+            towrite = StringIO()
+            export_df.to_csv(towrite, index=False)
+            b64 = base64.b64encode(towrite.getvalue().encode()).decode()
+            href = f"<a href='data:file/csv;base64,{b64}' download='{selected_week}_연관어_문장.csv'>📥</a>"
+            st.markdown(f"<div style='text-align:right;font-size:24px;padding-top:25px'>{href}</div>", unsafe_allow_html=True)
 
     # (중략 - 네트워크 그래프 및 선그래프 출력은 그대로 유지)
     st.markdown("\n")
 
-    
 
     nodes, links, added_words = [], [], set()
     sentence_map = {}
