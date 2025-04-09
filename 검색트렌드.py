@@ -8,13 +8,11 @@ from streamlit_tags import st_tags
 def show_trend_tab():
     # ✅ 전체 스타일 적용
     st.markdown("""
-    <link href="https://cdn.jsdelivr.net/npm/pretendard@1.3.8/dist/web/static/pretendard.css" rel="stylesheet">
-    <style>
-        html, body, [class^="css"] {
-            font-family: 'Pretendard', sans-serif !important;
+        <style>
+        * {
+            font-family: 'Pretendard', sans-serif;
+
         }
-    </style>
-""", unsafe_allow_html=True)
 
         /* 🔍 분석 버튼 (붉은 강조) - 첫 번째 st.button */
         div.stButton:nth-of-type(1) > button {
