@@ -103,7 +103,7 @@ def show_relation_tab():
     links_json = json.dumps(links)
     sentences_json = json.dumps(sentence_map, ensure_ascii=False)
 
-    # ✅ 네트워크 그래프 HTML 직접 생성
+    # ✅ 네트워크 그래프 HTML 직접 생성 (중괄호 이스케이프 수정)
     html_code = f"""
     <!DOCTYPE html>
     <html lang=\"ko\">
@@ -138,7 +138,7 @@ def show_relation_tab():
         .force("charge", d3.forceManyBody().strength(-100))
         .force("center", d3.forceCenter(width / 2, height / 2));
 
-    const linkCount = {};
+    const linkCount = {{}};
     links.forEach(l => {{
         linkCount[l.target] = (linkCount[l.target] || 0) + 1;
     }});
@@ -162,14 +162,14 @@ def show_relation_tab():
 
     node.append("circle")
         .attr("r", d => d.freq ? Math.max(5, Math.min(30, d.freq * 0.3)) : 20)
-        .attr("fill", d => {
+        .attr("fill", d => {{
             if (d.group === "positive") return "#ADD8E6";
             if (d.group === "negative") return "#FA8072";
             return "#FFD700";
-        })
+        }})
         .attr("stroke", "#333")
         .attr("stroke-width", 2)
-        .attr("stroke-dasharray", "4,2")
+        .attr("stroke-dasharray", "4,2");
 
     node.append("text")
         .attr("dy", "0.35em")
@@ -177,47 +177,47 @@ def show_relation_tab():
         .attr("font-size", "11px")
         .text(d => d.id.replace("_positive", "").replace("_negative", ""));
 
-    node.on("click", (event, d) => {
+    node.on("click", (event, d) => {{
         const panel = document.getElementById("sentences");
         const counter = document.getElementById("count-label");
         const data = sentenceData[d.id];
-        if (!data || data.length === 0) {
+        if (!data || data.length === 0) {{
             panel.innerHTML = "<i>관련 문장이 없습니다.</i>";
             counter.innerHTML = "";
             return;
-        }
+        }}
         panel.innerHTML = data.map(s => `
-            <a class="text-link" href="${s['원본링크']}" target="_blank">
-                ${s['문장']}
+            <a class="text-link" href="${{s['원본링크']}}" target="_blank">
+                ${{s['문장']}}
             </a>
         `).join("");
-        counter.innerHTML = `(언급횟수: ${data[0].count}회)`;
-    });
+        counter.innerHTML = `(언급횟수: ${{data[0].count}}회)`;
+    }});
 
-    simulation.on("tick", () => {
+    simulation.on("tick", () => {{
         link.attr("x1", d => d.source.x)
             .attr("y1", d => d.source.y)
             .attr("x2", d => d.target.x)
             .attr("y2", d => d.target.y);
-        node.attr("transform", d => `translate(${d.x},${d.y})`);
-    });
+        node.attr("transform", d => `translate(${{d.x}},${{d.y}})`);
+    }});
 
-    function dragstarted(event, d) {
+    function dragstarted(event, d) {{
         if (!event.active) simulation.alphaTarget(0.3).restart();
         d.fx = d.x;
         d.fy = d.y;
-    }
+    }}
 
-    function dragged(event, d) {
+    function dragged(event, d) {{
         d.fx = event.x;
         d.fy = event.y;
-    }
+    }}
 
-    function dragended(event, d) {
+    function dragended(event, d) {{
         if (!event.active) simulation.alphaTarget(0);
         d.fx = null;
         d.fy = null;
-    }
+    }}
     </script>
     </body>
     </html>
