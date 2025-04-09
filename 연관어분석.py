@@ -18,7 +18,7 @@ def show_relation_tab():
     selected_week = weeks[selected_label]
 
     base_url = f"https://raw.githubusercontent.com/umne012/research_simple/main/{selected_week}"
-    word_url = f"{base_url}/morpheme_word_count_merged.csv"
+    word_url = f"{base_url}/morpheme_word_count.csv"
     morph_urls = [f"{base_url}/morpheme_analysis_part{i}.csv" for i in range(1, 4)]
     sentiment_url = f"{base_url}/sentiment_analysis_merged.csv"
 
@@ -43,7 +43,7 @@ def show_relation_tab():
         try:
             sent_df = pd.read_csv(sentiment_url)
         except Exception as e:
-            st.error(f"sentiment_analysis.csv 불러오기 오류: {e}")
+            st.error(f"sentiment_analysis_merged.csv 불러오기 오류: {e}")
             return None, None, None
 
         morph_df["문장ID"] = morph_df["문장ID"].astype(str)
@@ -95,6 +95,7 @@ def show_relation_tab():
 
     # (중략 - 네트워크 그래프 및 선그래프 출력은 그대로 유지)
     st.markdown("\n")
+
 
 
     nodes, links, added_words = [], [], set()
