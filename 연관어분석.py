@@ -8,11 +8,13 @@ def show_relation_tab():
     import base64
     
     st.markdown("""
-        <style>
-        * {
-            font-family: 'Pretendard', sans-serif;
-
-        })
+    <link href="https://cdn.jsdelivr.net/npm/pretendard@1.3.8/dist/web/static/pretendard.css" rel="stylesheet">
+    <style>
+        html, body, [class^="css"] {
+            font-family: 'Pretendard', sans-serif !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
         
     st.title("📌 연관어 분석")
 
