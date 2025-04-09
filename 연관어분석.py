@@ -161,7 +161,7 @@ def show_relation_tab():
             .on("end", dragended));
 
     node.append("circle")
-        .attr("r", d => d.freq ? Math.max(5, Math.min(30, d.freq * 0.3)) : 20)
+        .attr("r", d => d.freq ? Math.max(5, Math.min(30, d.freq * 0.3)) : 40)
         .attr("fill", d => {{
             if (d.group === "positive") return "#ADD8E6";
             if (d.group === "negative") return "#FA8072";
