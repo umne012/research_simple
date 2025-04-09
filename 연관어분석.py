@@ -18,7 +18,7 @@ def show_relation_tab():
     selected_week = weeks[selected_label]
 
     base_url = f"https://raw.githubusercontent.com/umne012/research_simple/main/{selected_week}"
-    word_url = f"{base_url}/morpheme_word_count.csv"
+    word_url = f"{base_url}/morpheme_word_count_merged.csv"
     morph_urls = [f"{base_url}/morpheme_analysis_part{i}.csv" for i in range(1, 4)]
     sentiment_url = f"{base_url}/sentiment_analysis_merged.csv"
 
