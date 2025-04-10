@@ -128,45 +128,45 @@ def show_relation_tab():
         return snippet.replace(keyword, f"<b style='background:yellow'>{keyword}</b>")
 
     for brand, df in word_data.items():
-    nodes.append({"id": brand, "group": "brand"})
-    word_entries = []
-    for _, row in df.iterrows():
-        word = row["단어"]
-        if row.get("positive", 0) > 0:
-            word_entries.append((f"{word}_positive", row["positive"], "positive", word))
-        if row.get("negative", 0) > 0:
-            word_entries.append((f"{word}_negative", row["negative"], "negative", word))
-    top_entries = sorted(word_entries, key=lambda x: x[1], reverse=True)[:10]
-    for node_id, freq, sentiment, word in top_entries:
-        if node_id not in added_words:
-            nodes.append({"id": node_id, "group": sentiment, "freq": freq})
-            added_words.add(node_id)
-
-            # 🔧 여기 수정됨: 그룹 조건 포함
-            match = morph_df[
-                (morph_df["단어"] == word) &
-                (morph_df["감정"] == sentiment) &
-                (morph_df["그룹"] == brand)
-            ]
-            matched_ids = match["문장ID"].unique()
-
-            matched_sents = sent_df[
-                (sent_df["문장ID"].isin(matched_ids)) &
-                (sent_df["그룹"] == brand)
-            ]
-
-            shown = []
-            for _, row in matched_sents.iterrows():
-                snippet = highlight_and_shorten(str(row["문장"]), word)
-                shown.append({
-                    "문장": snippet,
-                    "원본링크": row["원본링크"],
-                    "count": freq
-                })
-            sentence_map[node_id] = shown
-
-        links.append({"source": brand, "target": node_id})
-        link_counter[node_id] = link_counter.get(node_id, 0) + 1
+        nodes.append({"id": brand, "group": "brand"})
+        word_entries = []
+        for _, row in df.iterrows():
+            word = row["단어"]
+            if row.get("positive", 0) > 0:
+                word_entries.append((f"{word}_positive", row["positive"], "positive", word))
+            if row.get("negative", 0) > 0:
+                word_entries.append((f"{word}_negative", row["negative"], "negative", word))
+        top_entries = sorted(word_entries, key=lambda x: x[1], reverse=True)[:10]
+        for node_id, freq, sentiment, word in top_entries:
+            if node_id not in added_words:
+                nodes.append({"id": node_id, "group": sentiment, "freq": freq})
+                added_words.add(node_id)
+    
+                # 🔧 여기 수정됨: 그룹 조건 포함
+                match = morph_df[
+                    (morph_df["단어"] == word) &
+                    (morph_df["감정"] == sentiment) &
+                    (morph_df["그룹"] == brand)
+                ]
+                matched_ids = match["문장ID"].unique()
+    
+                matched_sents = sent_df[
+                    (sent_df["문장ID"].isin(matched_ids)) &
+                    (sent_df["그룹"] == brand)
+                ]
+    
+                shown = []
+                for _, row in matched_sents.iterrows():
+                    snippet = highlight_and_shorten(str(row["문장"]), word)
+                    shown.append({
+                        "문장": snippet,
+                        "원본링크": row["원본링크"],
+                        "count": freq
+                    })
+                sentence_map[node_id] = shown
+    
+            links.append({"source": brand, "target": node_id})
+            link_counter[node_id] = link_counter.get(node_id, 0) + 1
 
 
     nodes_json = json.dumps(nodes)
