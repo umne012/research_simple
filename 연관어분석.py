@@ -7,15 +7,10 @@ def show_relation_tab():
     import json
     import base64
     import csv
-
     st.markdown("""
-    <link href="https://cdn.jsdelivr.net/npm/pretendard@1.3.8/dist/web/static/pretendard.css" rel="stylesheet">
-    <style>
-        html, body, [class^="css"] {
-            font-family: 'Pretendard', sans-serif !important;
-        }
-    </style>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     """, unsafe_allow_html=True)
+    
     st.title("📌 연관어 분석")
 
     weeks = {
@@ -112,15 +107,17 @@ def show_relation_tab():
             export_df = pd.DataFrame(export_rows)
             from io import BytesIO
             import csv
-    
-            # 🔧 텍스트 정리 (줄바꿈, 따옴표)
+            import base64
+        
             export_df["문장"] = export_df["문장"].astype(str).str.replace("\n", " ").str.replace("\r", " ").str.replace('"', "'")
-    
+        
             towrite = BytesIO()
             export_df.to_csv(towrite, index=False, encoding="cp949", quoting=csv.QUOTE_ALL)
             towrite.seek(0)
             b64 = base64.b64encode(towrite.read()).decode()
-            href = f"<a href='data:file/csv;base64,{b64}' download='{selected_week}_연관어_문장.csv'>📥</a>"
+        
+            icon_html = "<i class='bi bi-floppy2-fill'></i>"
+            href = f"<a href='data:file/csv;base64,{b64}' download='{selected_week}_연관어_문장.csv'>{icon_html}</a>"
             st.markdown(f"<div style='text-align:right;font-size:24px;padding-top:25px'>{href}</div>", unsafe_allow_html=True)
 
     st.markdown("\n")
