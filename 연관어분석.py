@@ -6,6 +6,7 @@ def show_relation_tab():
     from io import StringIO
     import json
     import base64
+    import csv
 
     st.markdown("""
     <link href="https://cdn.jsdelivr.net/npm/pretendard@1.3.8/dist/web/static/pretendard.css" rel="stylesheet">
@@ -110,8 +111,13 @@ def show_relation_tab():
         if export_rows:
             export_df = pd.DataFrame(export_rows)
             from io import BytesIO
+            import csv
+    
+            # 🔧 텍스트 정리 (줄바꿈, 따옴표)
+            export_df["문장"] = export_df["문장"].astype(str).str.replace("\n", " ").str.replace("\r", " ").str.replace('"', "'")
+    
             towrite = BytesIO()
-            export_df.to_csv(towrite, index=False, encoding="cp949")
+            export_df.to_csv(towrite, index=False, encoding="cp949", quoting=csv.QUOTE_ALL)
             towrite.seek(0)
             b64 = base64.b64encode(towrite.read()).decode()
             href = f"<a href='data:file/csv;base64,{b64}' download='{selected_week}_연관어_문장.csv'>📥</a>"
