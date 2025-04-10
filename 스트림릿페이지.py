@@ -29,7 +29,7 @@ elif selected_tab == "연관어 분석":
     show_relation_tab()
 
 elif selected_tab == "긍·부정 분석":
-    from 긍·부정 분석 import show_sentimental_tab
+    from 긍부정분석 import show_sentimental_tab
     show_sentimental_tab()
 
 elif selected_tab == "트렌드 변화 분석":
