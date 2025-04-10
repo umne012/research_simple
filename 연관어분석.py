@@ -142,7 +142,7 @@ def show_relation_tab():
                 nodes.append({"id": node_id, "group": sentiment, "freq": freq})
                 added_words.add(node_id)
 
-                match = morph_df[(morph_df["단어"] == word) & (morph_df["감정"] == sentiment)]
+                match = morph_df[(morph_df["단어"] == word) & (morph_df["감정"] == sentiment)& (morph_df["그룹"] == brand)]
                 matched_ids = match["문장ID"].unique()
                 matched_sents = sent_df[sent_df["문장ID"].isin(matched_ids)]
                 shown = []
