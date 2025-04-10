@@ -61,7 +61,8 @@ def show_relation_tab():
         sent_df["문장ID"] = sent_df["문장ID"].astype(str)
     
         return word_data, morph_df, sent_df
-
+        
+    st.write("📌 morph_df columns:", morph_df.columns.tolist())
 
     word_data, morph_df, sent_df = load_data()
     if word_data is None:
