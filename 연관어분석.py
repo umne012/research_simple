@@ -39,7 +39,7 @@ def show_relation_tab():
         for url in morph_urls:
             try:
                 df = pd.read_csv(url)
-                if not df.empty and all(col in df.columns for col in ["단어", "감정", "문장ID","그룹"]):
+                if not df.empty and all(col in df.columns for col in ["단어", "감정", "문장ID"]):
                     morph_frames.append(df)
             except Exception as e:
                 st.warning(f"⚠️ {url} 불러오기 실패: {e}")
