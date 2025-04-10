@@ -11,11 +11,11 @@ if "selected_tab" not in st.session_state:
 # ✅ 사이드 메뉴
 with st.sidebar:
     selected_tab = option_menu(
-        menu_title="브랜드 리서치",
-        options=["검색트렌드", "연관어 분석", "긍부정 분석"],
-        icons=["bar-chart", "graph-up", "emoji-smile"],
+        menu_title="Research",
+        options=["검색트렌드", "연관어 분석", "긍·부정 분석", "트렌드 변화 분석"],
+        icons=["bar-chart", "diagram-3", "emoji-smile", "shuffle"],
         menu_icon="cast",
-        default_index=["검색트렌드", "연관어 분석", "긍부정 분석"].index(st.session_state.selected_tab),
+        default_index=["검색트렌드", "연관어 분석", "긍·부정 분석", "트렌드 변화 분석"].index(st.session_state.selected_tab),
     )
     st.session_state.selected_tab = selected_tab
 
@@ -28,7 +28,7 @@ elif selected_tab == "연관어 분석":
     from 연관어분석 import show_relation_tab
     show_relation_tab()
 
-elif selected_tab == "긍부정 분석":
+elif selected_tab == "긍·부정 분석":
     st.title("🙂 긍·부정 분석 (개발 예정)")
     st.info("이 탭은 준비 중입니다.")
 
