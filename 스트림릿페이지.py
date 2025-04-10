@@ -29,8 +29,8 @@ elif selected_tab == "연관어 분석":
     show_relation_tab()
 
 elif selected_tab == "긍·부정 분석":
-    st.title("🙂 긍·부정 분석 (개발 예정)")
-    st.info("이 탭은 준비 중입니다.")
+    from 긍·부정 분석 import show_sentimental_tab
+    show_sentimental_tab()
 
 elif selected_tab == "트렌드 변화 분석":
     st.title("🙂 트렌드 변화 분석 (개발 예정)")
