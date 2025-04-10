@@ -14,7 +14,7 @@ def show_relation_tab():
             font-family: 'Pretendard', sans-serif !important;
         }
     </style>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
     st.title("📌 연관어 분석")
 
     weeks = {
@@ -33,12 +33,14 @@ def show_relation_tab():
     @st.cache_data(show_spinner=False)
     def load_data():
         word_df = pd.read_csv(word_url)
+        word_df.columns = word_df.columns.str.strip()
         word_data = {brand: df for brand, df in word_df.groupby("그룹")}
-    
+
         morph_frames = []
         for url in morph_urls:
             try:
                 df = pd.read_csv(url)
+                df.columns = df.columns.str.strip()
                 if not df.empty and all(col in df.columns for col in ["단어", "감정", "문장ID", "그룹"]):
                     morph_frames.append(df)
             except Exception as e:
@@ -46,29 +48,28 @@ def show_relation_tab():
         if not morph_frames:
             st.error("❌ 형태소 분석 데이터가 없거나 비어 있습니다.")
             return None, None, None
-    
+
         morph_df = pd.concat(morph_frames, ignore_index=True)
-        morph_df = morph_df.merge(word_df[["단어", "그룹"]].drop_duplicates(), on="단어", how="left")
-    
+        morph_df.columns = morph_df.columns.str.strip()
+
+        # 병합 에러 처리 (그룹_x, 그룹_y 정리)
+        if "그룹_x" in morph_df.columns:
+            morph_df["그룹"] = morph_df["그룹_x"]
+            morph_df.drop(columns=["그룹_x", "그룹_y"], inplace=True, errors="ignore")
+
         try:
             sent_df = pd.read_csv(sentiment_url)
-            sent_df.columns = sent_df.columns.str.strip()  # ✅ KeyError 방지용
+            sent_df.columns = sent_df.columns.str.strip()
         except Exception as e:
             st.error(f"sentiment_analysis_merged.csv 불러오기 오류: {e}")
             return None, None, None
-    
+
         morph_df["문장ID"] = morph_df["문장ID"].astype(str)
         sent_df["문장ID"] = sent_df["문장ID"].astype(str)
-    
+
         return word_data, morph_df, sent_df
-        
-    
 
     word_data, morph_df, sent_df = load_data()
-
-    st.write("📌 morph_df columns:", morph_df.columns.tolist())
-
-    
     if word_data is None:
         return
 
@@ -85,9 +86,13 @@ def show_relation_tab():
 
         top_entries = sorted(word_entries, key=lambda x: x[1], reverse=True)[:10]
         for word, freq, sentiment in top_entries:
-            match = morph_df[(morph_df["단어"] == word) & (morph_df["감정"] == sentiment) & (morph_df["그룹"] == brand)]
+            match = morph_df[
+                (morph_df["단어"] == word) & (morph_df["감정"] == sentiment) & (morph_df["그룹"] == brand)
+            ]
             matched_ids = match["문장ID"].unique()
-            matched_sents = sent_df[sent_df["문장ID"].isin(matched_ids)]
+            matched_sents = sent_df[
+                (sent_df["문장ID"].isin(matched_ids)) & (sent_df["그룹"] == brand)
+            ]
             for _, row in matched_sents.iterrows():
                 export_rows.append({
                     "브랜드": brand,
@@ -112,12 +117,9 @@ def show_relation_tab():
             href = f"<a href='data:file/csv;base64,{b64}' download='{selected_week}_연관어_문장.csv'>📥</a>"
             st.markdown(f"<div style='text-align:right;font-size:24px;padding-top:25px'>{href}</div>", unsafe_allow_html=True)
 
-    # (중략 - 네트워크 그래프 및 선그래프 출력은 그대로 유지)
     st.markdown("\n")
 
-
-
-
+    # ✅ 네트워크 그래프용 데이터 처리
     nodes, links, added_words = [], [], set()
     sentence_map = {}
     link_counter = {}
@@ -149,31 +151,26 @@ def show_relation_tab():
             if node_id not in added_words:
                 nodes.append({"id": node_id, "group": sentiment, "freq": freq})
                 added_words.add(node_id)
-    
+
                 match = morph_df[
-                    (morph_df["단어"] == word) &
-                    (morph_df["감정"] == sentiment) &
-                    (morph_df["그룹"] == brand)
+                    (morph_df["단어"] == word) & (morph_df["감정"] == sentiment) & (morph_df["그룹"] == brand)
                 ]
                 matched_ids = match["문장ID"].unique()
-                
                 matched_sents = sent_df[
-                    (sent_df["문장ID"].isin(matched_ids)) &
-                    (sent_df["그룹"] == brand)
+                    (sent_df["문장ID"].isin(matched_ids)) & (sent_df["그룹"] == brand)
                 ]
-    
                 shown = []
                 for _, row in matched_sents.iterrows():
                     snippet = highlight_and_shorten(str(row["문장"]), word)
-                    shown.append({
-                        "문장": snippet,
-                        "원본링크": row["원본링크"],
-                        "count": freq
-                    })
+                    shown.append({"문장": snippet, "원본링크": row["원본링크"], "count": freq})
                 sentence_map[node_id] = shown
-    
+
             links.append({"source": brand, "target": node_id})
             link_counter[node_id] = link_counter.get(node_id, 0) + 1
+
+    # D3 네트워크 그래프 HTML 생성 및 렌더링 생략 (기존과 동일)
+    # Plotly 선그래프도 생략 (기존과 동일)
+
 
 
 
