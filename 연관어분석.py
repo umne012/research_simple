@@ -66,7 +66,7 @@ def show_relation_tab():
 
     word_data, morph_df, sent_df = load_data()
 
-    st.write("📌 morph_df columns:", morph_df.columns.tolist()
+    st.write("📌 morph_df columns:", morph_df.columns.tolist())
 
     
     if word_data is None:
