@@ -117,7 +117,7 @@ def show_relation_tab():
             b64 = base64.b64encode(towrite.read()).decode()
         
             # ✅ 아이콘 태그
-            icon_html = "<i class='bi bi-floppy2-fill'></i> 다운로드"
+            icon_html = "<i class='bi bi-floppy2-fill'></i>"
             href = f"<a href='data:file/csv;base64,{b64}' download='{selected_week}_연관어_문장.csv'>{icon_html}</a>"
         
             # ✅ 렌더링
