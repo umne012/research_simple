@@ -6,7 +6,7 @@ def show_relation_tab():
     from io import StringIO
     import json
     import base64
-    
+
     st.markdown("""
     <link href="https://cdn.jsdelivr.net/npm/pretendard@1.3.8/dist/web/static/pretendard.css" rel="stylesheet">
     <style>
@@ -15,7 +15,6 @@ def show_relation_tab():
         }
     </style>
 """, unsafe_allow_html=True)
-        
     st.title("📌 연관어 분석")
 
     weeks = {
@@ -48,6 +47,7 @@ def show_relation_tab():
             st.error("❌ 형태소 분석 데이터가 없거나 비어 있습니다.")
             return None, None, None
         morph_df = pd.concat(morph_frames, ignore_index=True)
+        morph_df = morph_df.merge(word_df[["단어", "그룹"]].drop_duplicates(), on="단어", how="left")
 
         try:
             sent_df = pd.read_csv(sentiment_url)
@@ -77,7 +77,7 @@ def show_relation_tab():
 
         top_entries = sorted(word_entries, key=lambda x: x[1], reverse=True)[:10]
         for word, freq, sentiment in top_entries:
-            match = morph_df[(morph_df["단어"] == word) & (morph_df["감정"] == sentiment)]
+            match = morph_df[(morph_df["단어"] == word) & (morph_df["감정"] == sentiment) & (morph_df["그룹"] == brand)]
             matched_ids = match["문장ID"].unique()
             matched_sents = sent_df[sent_df["문장ID"].isin(matched_ids)]
             for _, row in matched_sents.iterrows():
