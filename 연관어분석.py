@@ -116,10 +116,13 @@ def show_relation_tab():
             towrite.seek(0)
             b64 = base64.b64encode(towrite.read()).decode()
         
-            icon_html = "<i class='bi bi-floppy2-fill'></i>"
+            # ✅ 아이콘 태그
+            icon_html = "<i class='bi bi-floppy2-fill'></i> 다운로드"
             href = f"<a href='data:file/csv;base64,{b64}' download='{selected_week}_연관어_문장.csv'>{icon_html}</a>"
+        
+            # ✅ 렌더링
             st.markdown(f"<div style='text-align:right;font-size:24px;padding-top:25px'>{href}</div>", unsafe_allow_html=True)
-
+    
     st.markdown("\n")
 
     # ✅ 네트워크 그래프용 데이터 처리
