@@ -34,31 +34,34 @@ def show_relation_tab():
     def load_data():
         word_df = pd.read_csv(word_url)
         word_data = {brand: df for brand, df in word_df.groupby("그룹")}
-
+    
         morph_frames = []
         for url in morph_urls:
             try:
                 df = pd.read_csv(url)
-                if not df.empty and all(col in df.columns for col in ["단어", "감정", "문장ID"]):
+                if not df.empty and all(col in df.columns for col in ["단어", "감정", "문장ID", "그룹"]):
                     morph_frames.append(df)
             except Exception as e:
                 st.warning(f"⚠️ {url} 불러오기 실패: {e}")
         if not morph_frames:
             st.error("❌ 형태소 분석 데이터가 없거나 비어 있습니다.")
             return None, None, None
+    
         morph_df = pd.concat(morph_frames, ignore_index=True)
         morph_df = morph_df.merge(word_df[["단어", "그룹"]].drop_duplicates(), on="단어", how="left")
-
+    
         try:
             sent_df = pd.read_csv(sentiment_url)
+            sent_df.columns = sent_df.columns.str.strip()  # ✅ KeyError 방지용
         except Exception as e:
             st.error(f"sentiment_analysis_merged.csv 불러오기 오류: {e}")
             return None, None, None
-
+    
         morph_df["문장ID"] = morph_df["문장ID"].astype(str)
         sent_df["문장ID"] = sent_df["문장ID"].astype(str)
-
+    
         return word_data, morph_df, sent_df
+
 
     word_data, morph_df, sent_df = load_data()
     if word_data is None:
@@ -142,14 +145,13 @@ def show_relation_tab():
                 nodes.append({"id": node_id, "group": sentiment, "freq": freq})
                 added_words.add(node_id)
     
-                # 🔧 여기 수정됨: 그룹 조건 포함
                 match = morph_df[
                     (morph_df["단어"] == word) &
                     (morph_df["감정"] == sentiment) &
                     (morph_df["그룹"] == brand)
                 ]
                 matched_ids = match["문장ID"].unique()
-    
+                
                 matched_sents = sent_df[
                     (sent_df["문장ID"].isin(matched_ids)) &
                     (sent_df["그룹"] == brand)
@@ -167,6 +169,7 @@ def show_relation_tab():
     
             links.append({"source": brand, "target": node_id})
             link_counter[node_id] = link_counter.get(node_id, 0) + 1
+
 
 
     nodes_json = json.dumps(nodes)
