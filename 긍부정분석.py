@@ -17,19 +17,24 @@ def show_sentimental_tab():
     selected_label = st.selectbox("📂 주차 선택", list(weeks.keys()), index=0)
     selected_week = weeks[selected_label]
 
-    # ✅ 데이터 경로 (GitHub 실제 경로에 맞게 파일명 수정)
+    # ✅ 실제 GitHub 경로로 정의
     base_url = f"https://raw.githubusercontent.com/umne012/research_simple/main/{selected_week}"
-    morph_url = f"{base_url}/morpheme_word_count_merged.csv"
-    sent_url = f"{base_url}/sentiment_analysis_merged.csv"
+    morph_urls = [f"{base_url}/morpheme_analysis_part{i}.csv" for i in range(1, 4)]
+    sentiment_url = f"{base_url}/sentiment_analysis_merged.csv"
 
     @st.cache_data
     def load_data():
-        morph_df = pd.read_csv(morph_url)
-        sent_df = pd.read_csv(sent_url)
+        morph_frames = []
+        for url in morph_urls:
+            df = pd.read_csv(url)
+            df.columns = df.columns.str.strip()
+            morph_frames.append(df)
 
-        morph_df.columns = morph_df.columns.str.strip()
-        sent_df.columns = sent_df.columns.str.strip()
+        morph_df = pd.concat(morph_frames, ignore_index=True)
         morph_df["문장ID"] = morph_df["문장ID"].astype(str)
+
+        sent_df = pd.read_csv(sentiment_url)
+        sent_df.columns = sent_df.columns.str.strip()
         sent_df["문장ID"] = sent_df["문장ID"].astype(str)
 
         return morph_df, sent_df
