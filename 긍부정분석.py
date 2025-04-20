@@ -17,9 +17,9 @@ def show_sentimental_tab():
     selected_label = st.selectbox("📂 주차 선택", list(weeks.keys()), index=0)
     selected_week = weeks[selected_label]
 
-    # ✅ 데이터 경로
+    # ✅ 데이터 경로 (GitHub 실제 경로에 맞게 파일명 수정)
     base_url = f"https://raw.githubusercontent.com/umne012/research_simple/main/{selected_week}"
-    morph_url = f"{base_url}/morpheme_analysis_merged.csv"
+    morph_url = f"{base_url}/morpheme_word_count_merged.csv"
     sent_url = f"{base_url}/sentiment_analysis_merged.csv"
 
     @st.cache_data
