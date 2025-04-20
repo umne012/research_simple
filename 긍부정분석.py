@@ -79,7 +79,7 @@ def show_sentimental_tab():
             nodes_json = json.dumps(nodes, ensure_ascii=False)
             sentence_json = json.dumps(sentence_map, ensure_ascii=False)
 
-            # ✅ HTML D3.js 코드 삽입
+            # ✅ HTML D3.js 코드 삽입 (중괄호 이스케이프 처리)
             html_code = f"""
             <html>
             <head>
@@ -136,7 +136,7 @@ def show_sentimental_tab():
                     .attr("text-anchor", "middle")
                     .text(d => d.id);
 
-                node.on("click", (event, d) => {
+                node.on("click", (event, d) => {{
                     const box = document.getElementById("panel");
                     const sents = sentenceData[d.id];
                     if (!sents) {{
@@ -144,11 +144,11 @@ def show_sentimental_tab():
                         return;
                     }}
                     box.innerHTML = sents.map(s => `<div><a href='${{s.링크}}' target='_blank'>📌 ${{s.문장}}</a></div>`).join("");
-                });
+                }});
 
-                simulation.on("tick", () => {
+                simulation.on("tick", () => {{
                     node.attr("transform", d => `translate(${{d.x}},${{d.y}})`);
-                });
+                }});
 
                 function dragstarted(event, d) {{ if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }}
                 function dragged(event, d) {{ d.fx = event.x; d.fy = event.y; }}
