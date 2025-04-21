@@ -85,62 +85,53 @@ def show_sentimental_tab():
             </style></head><body>
             <svg></svg>
             <script>
-                const nodes = {{ nodes_json }};
-                const sentenceData = {{ sents_json }};
-            
+                const nodes = {nodes_json};
+                const sentenceData = {sents_json};
                 const svg = d3.select("svg");
                 const width = document.querySelector("svg").clientWidth;
                 const height = document.querySelector("svg").clientHeight;
-            
+
                 const sim = d3.forceSimulation(nodes)
                     .force("center", d3.forceCenter(width / 2, height / 2))
                     .force("charge", d3.forceManyBody().strength(1))  // 💡 약한 힘으로 덜 밀려나게
                     .force("collision", d3.forceCollide().radius(d => Math.sqrt(d.size) * 4))  // 💡 간격 조정
                     .alphaDecay(0.06);
-            
+
                 const node = svg.selectAll("g")
                     .data(nodes).enter().append("g")
                     .call(d3.drag()
                         .on("start", dragstarted)
                         .on("drag", dragged)
                         .on("end", dragended));
-            
+
                 node.append("rect")
                     .attr("width", d => Math.max(40, Math.min(120, d.size * 2.5)))
                     .attr("height", d => Math.max(20, Math.min(60, d.size * 1.4)))
                     .attr("x", d => -Math.max(20, Math.min(60, d.size * 1.25)))
                     .attr("y", d => -Math.max(10, Math.min(30, d.size * 0.7)))
                     .attr("rx", 12).attr("ry", 12)
-                    .attr("fill", d => d.group === "positive" ? "#68a0cf" : "#fa7b7b");
-            
+                    .attr("fill", d => d.group === "positive" ? "#68a0cf" : "#fa7b7b")
+
                 node.append("text")
                     .attr("text-anchor", "middle")
                     .attr("dy", "0.3em")
                     .text(d => d.id);
-            
-                sim.on("tick", () => {
-                    node.attr("transform", d => `translate(${d.x},${d.y})`);
-                });
-            
-                node.on("click", (e, d) => {
+
+                sim.on("tick", () => {{
+                    node.attr("transform", d => `translate(${{d.x}},${{d.y}})`);
+                }});
+
+                node.on("click", (e, d) => {{
                     const box = parent.document.getElementById("sentence-panel");
                     const sents = sentenceData[d.id] || [];
                     box.innerHTML = sents.length
-                        ? sents.map(s => `<a href='${s.링크}' target='_blank'>📌 ${s.문장}</a>`).join("<br><br>")
+                        ? sents.map(s => `<a href='${{s.링크}}' target='_blank'>📌 ${{s.문장}}</a>`).join("<br><br>")
                         : "<i>문장이 없습니다</i>";
-                });
-            
-                function dragstarted(event, d) {
-                    if (!event.active) sim.alphaTarget(0.3).restart();
-                    d.fx = d.x; d.fy = d.y;
-                }
-                function dragged(event, d) {
-                    d.fx = event.x; d.fy = event.y;
-                }
-                function dragended(event, d) {
-                    if (!event.active) sim.alphaTarget(0);
-                    d.fx = null; d.fy = null;
-                }
+                }});
+
+                function dragstarted(event, d) {{ if (!event.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }}
+                function dragged(event, d) {{ d.fx = event.x; d.fy = event.y; }}
+                function dragended(event, d) {{ if (!event.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }}
             </script></body></html>
             """
             html(html_code, height=320)
